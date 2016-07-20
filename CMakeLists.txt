@@ -1,4 +1,4 @@
-# --------------------------------------------------
+﻿# --------------------------------------------------
 # Filename: CMakeLists.txt
 # Initial Author: Rene Werner
 # Copyright (C) 2016 Department of Computational 
@@ -32,13 +32,13 @@ SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 # ---------- Find where VTK was built or installed.
 
-FIND_PACKAGE(VTK)
+# FIND_PACKAGE(VTK)
  
-IF(VTK_FOUND)
-  INCLUDE(${VTK_USE_FILE})
-ELSE(VTK_FOUND)
-  MESSAGE(FATAL_ERROR "Cannot build without VTK. Please set VTK_DIR.")
-ENDIF(VTK_FOUND)
+# IF(VTK_FOUND)
+#  INCLUDE(${VTK_USE_FILE})
+# ELSE(VTK_FOUND)
+#  MESSAGE(FATAL_ERROR "Cannot build without VTK. Please set VTK_DIR.")
+# ENDIF(VTK_FOUND)
 
 # SET(VTK_LIBS 
 #   vtkRendering
@@ -66,7 +66,7 @@ ENDIF(ITK_FOUND)
 
 LINK_LIBRARIES(
   ${ITK_LIBRARIES}
-  ${VTK_LIBRARIES}
+ # ${VTK_LIBRARIES}
 )
 
 # SET(ITK_LIBS 
