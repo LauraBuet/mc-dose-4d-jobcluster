@@ -1,6 +1,17 @@
 /** \file icnsViewVTKPolyData.cxx
  *
- *  Purpose: Load and view (a list of) vtk polydata structure.
+ *  Purpose: 
+ *  Load and view (a list of) vtk polydata structure. Also works
+ *  with obj files, either single or multi-texture. For the applied mutli-
+ *  texture obj-support used see
+ *
+ *  https://github.com/Scylardor/vtkTexturingHelper
+ *
+ *  and
+ *
+ *  http://scylardor.fr/2013/05/06/making-multi-texturing-work-with-vtk/
+ *
+ *  Optional: Use structure-specific transformations.
  *
  *  \b Initial \b Author: Rene Werner \n\n
  *  \b Copyright (C) 2016 Department of Computational Neuroscience,
@@ -43,14 +54,19 @@ extern "C"
 
 void PrintHelp()
 {
-  std::cout << "\n";
-  std::cout << "Usage :\n";
-  std::cout << "icnsViewVTKPolyData -I <list of vtk mesh> \n\n";
+  std::cout <<  std::endl;
+  std::cout << "Usage:" << std::endl;
+  std::cout << "icnsViewVTKPolyData -I <list of vtk mesh> [...] \n"  << std::endl;
     
-  std::cout << "-I <list of vtk meshes>       Filename list of meshes to be displayed.\n";
-  std::cout << "                              Possible endings: VTK or OBJ.\n";
+  std::cout << "-I <list of vtk meshes>             Filename list of meshes to be displayed." << std::endl;
+  std::cout << "                                    Possible endings: VTK or OBJ." << std::endl;
+  std::cout << "-T <list of transformations>        Filename list of transformations (4x4 matrix)" << std::endl;
+  std::cout << "                                    to be applied to meshes." << std::endl;
+  std::cout << "-t <list of texture file prefixes>  List of texture prefixes (e.g. ..._eco06_hell)." << std::endl;
+  std::cout << "-e <list of texture file prefixes>  List of texture postfixes (e.g. .png)." << std::endl;
+  std::cout << "-n <number of texture files>        Number of texture files." << std::endl;
   
-  std::cout << "-h                            Print this help.\n";
+  std::cout << "-h                                  Print this help." << std::endl;
   std::cout << "\n";
 }
 
@@ -99,6 +115,7 @@ int main( int argc, char *argv[] )
   int c;
   int cnt = 0;
   
+  std::cout << "Reading parameters ..." << std::endl;
   while( (c = getopt( argc, argv, "I:T:t:n:e:h?" )) != -1 )
   {
     switch( c )
@@ -106,51 +123,46 @@ int main( int argc, char *argv[] )
       case 'I':
         optind--;
         cnt = 0;
-        std::cout << std::endl;
         for( ; optind < argc && *argv[optind] != '-'; optind++, cnt++ )
         {
           inputFilenames.push_back( argv[optind] );
-          std::cout << "Mesh [" << cnt << "] = " << argv[optind] << std::endl;
+          std::cout << "  Mesh [" << cnt << "] = " << argv[optind] << std::endl;
         }
         break;
       case 'T':
         optind--;
         cnt = 0;
-        std::cout << std::endl;
         for( ; optind < argc && *argv[optind] != '-'; optind++, cnt++ )
         {
           inputTransforms.push_back( argv[optind] );
-          std::cout << "Transform [" << cnt << "] = " << argv[optind] << std::endl;
+          std::cout << "  Transform [" << cnt << "] = " << argv[optind] << std::endl;
         }
         break;
       case 't':
         optind--;
         cnt = 0;
-        std::cout << std::endl;
         for( ; optind < argc && *argv[optind] != '-'; optind++, cnt++ )
         {
           inputTextureFilePrefixes.push_back( argv[optind] );
-          std::cout << "Texture file prefix [" << cnt << "] = " << argv[optind] << std::endl;
+          std::cout << "  Texture file prefix [" << cnt << "] = " << argv[optind] << std::endl;
         }
         break;
       case 'e':
         optind--;
         cnt = 0;
-        std::cout << std::endl;
         for( ; optind < argc && *argv[optind] != '-'; optind++, cnt++ )
         {
           inputTextureFilePostfixes.push_back( argv[optind] );
-          std::cout << "Texture file postfix [" << cnt << "] = " << argv[optind] << std::endl;
+          std::cout << "  Texture file postfix [" << cnt << "] = " << argv[optind] << std::endl;
         }
         break;
       case 'n':
         optind--;
         cnt = 0;
-        std::cout << std::endl;
         for( ; optind < argc && *argv[optind] != '-'; optind++, cnt++ )
         {
           inputNumberOfTextureFiles.push_back( atoi(argv[optind]) );
-          std::cout << "Number of texture files [" << cnt << "] = " << argv[optind] << std::endl;
+          std::cout << "  Number of texture files [" << cnt << "] = " << argv[optind] << std::endl;
         }
         break;
       case 'h':
@@ -192,7 +204,7 @@ int main( int argc, char *argv[] )
       polyDataReader = vtkSmartPointer<vtkPolyDataReader>::New();
       polyDataReader->SetFileName( currentFilename.c_str() );
       polyDataReader->Update();
-      
+    
       currentPolyData->DeepCopy( polyDataReader->GetOutput() );
       polyDataCollection->AddItem( currentPolyData );
       
@@ -217,62 +229,40 @@ int main( int argc, char *argv[] )
       vtkTexturingHelper objReader;
       readingOBJdata = true;
       
+      std::cout << "  Reading geometry file ... " << currentFilename << std::endl;
       objReader.ReadGeometryFile( currentFilename );
       
       // Read texture files:
       if( !inputNumberOfTextureFiles.empty() )
       {
+        std::cout << "  Reading textures ... " << std::endl;
         objReader.ReadTextureFiles( inputTextureFilePrefixes[iFilenames],
                                     inputTextureFilePostfixes[iFilenames],
                                     inputNumberOfTextureFiles[iFilenames] );
+        std::cout << "  Apply textures ... " << std::endl;
         objReader.ApplyTextures();
       }
       
       if( !inputTransforms.empty() )
       {
         vtkSmartPointer<vtkMatrix4x4> currentTransformMatrix = Load4x4Matrix( inputTransforms[iFilenames] );
-        
         vtkSmartPointer<vtkMatrixToLinearTransform> meshTransform = vtkSmartPointer<vtkMatrixToLinearTransform>::New();
         meshTransform->SetInput( currentTransformMatrix );
         
         objReader.GetActor()->SetUserTransform( meshTransform );
-        renderer->AddActor( objReader.GetActor() );
       }
       
       // Directly add actor to renderer:
       //currentPolyData->DeepCopy( objReader.GetPolyData() );
+      renderer->AddActor( objReader.GetActor() );
     }
 
   }
   
   // -------------------------------------------------------------
-  // Loading specified transforms:
-
-  if( !inputTransforms.empty() )
-  {
-    for( unsigned int iTransform = 0; iTransform < polyDataCollection->GetNumberOfItems(); iTransform++ )
-    {
-      vtkSmartPointer<vtkMatrix4x4> currentTransformMatrix = Load4x4Matrix( inputTransforms[iTransform] );
-      
-      vtkSmartPointer<vtkMatrixToLinearTransform> meshTransform = vtkSmartPointer<vtkMatrixToLinearTransform>::New();
-      meshTransform->SetInput( currentTransformMatrix );
-      
-      vtkSmartPointer<vtkTransformPolyDataFilter> meshTransformFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
-      meshTransformFilter->SetInputData( static_cast<vtkPolyData*>( polyDataCollection->GetItemAsObject( iTransform ) ) );
-      meshTransformFilter->SetTransform( meshTransform );
-      meshTransformFilter->Update();
-      
-      polyDataCollection->ReplaceItem( iTransform, meshTransformFilter->GetOutput() );
-    }
-  }
-  
-  // -------------------------------------------------------------
-  // Setting up data pipeline;
-  // First: setting up renderer:
-  
-  // vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-  
-  // Now, generating mapper and actor for each input file and
+  // Setting up data pipeline:
+ 
+  // Generating mapper and actor for each input file and
   // adding each actor to renderer:
   
   if( !readingOBJdata )
@@ -389,19 +379,26 @@ int main( int argc, char *argv[] )
   //style->SetCurrentRenderer(renderer);
   
   //renderer->AddActor( actor );
-  //renderer->SetBackground( 1.0, 1.0, 1.0 ); // Background color white
-  //renderer->GradientBackgroundOn();
+  renderer->SetBackground( 1.0, 1.0, 1.0 ); // Background color white
+  renderer->GradientBackgroundOn();
   renderer->SetBackground(1,1,1);
-  //renderer->SetBackground2(0,0,0);
+  renderer->SetBackground2(0,0,0);
   renderer->ResetCamera();
   
   renderWindow->SetSize( 800, 600 );
+  
+  //vtkSmartPointer<vtkOBJExporter> exporter = vtkSmartPointer<vtkOBJExporter>::New();
+  //exporter->SetInput( renderWindow );
+  //exporter->SetFilePrefix( "/Users/rwerner/Documents/2016_VonEconomo3D/TEST" );
+  //exporter->Write();
+  
   renderWindow->Render();
   
   // -------------------------------------------------------------
   // Visualizing data (rendering):
   
   // This starts the event loop and as a side effect causes an initial render:
+  std::cout << "Starting visualization!" << std::endl;
   renderWindowInteractor->Start();
   
   // Cleaning up:
@@ -411,6 +408,10 @@ int main( int argc, char *argv[] )
   
   return EXIT_SUCCESS;
 }
+
+// ---------------------------------------------------------------
+// Definition of helper functions:
+// ---------------------------------------------------------------
 
 vtkMatrix4x4* Load4x4Matrix( std::string filename )
 {
