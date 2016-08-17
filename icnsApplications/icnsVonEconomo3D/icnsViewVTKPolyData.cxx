@@ -54,10 +54,10 @@ extern "C"
 
 void PrintHelp()
 {
-  std::cout <<  std::endl;
+  std::cout << std::endl;
   std::cout << "Usage:" << std::endl;
   std::cout << "icnsViewVTKPolyData -I <list of vtk mesh> [...] \n"  << std::endl;
-    
+  std::cout << std::endl;
   std::cout << "-I <list of vtk meshes>             Filename list of meshes to be displayed." << std::endl;
   std::cout << "                                    Possible endings: VTK or OBJ." << std::endl;
   std::cout << "-T <list of transformations>        Filename list of transformations (4x4 matrix)" << std::endl;
@@ -65,7 +65,8 @@ void PrintHelp()
   std::cout << "-t <list of texture file prefixes>  List of texture prefixes (e.g. ..._eco06_hell)." << std::endl;
   std::cout << "-e <list of texture file prefixes>  List of texture postfixes (e.g. .png)." << std::endl;
   std::cout << "-n <number of texture files>        Number of texture files." << std::endl;
-  
+  std::cout << std::endl;
+  std::cout << "-c <list of colors>                 Colors to be assigned to actors (not for texture mode!)." << std::endl;
   std::cout << "-h                                  Print this help." << std::endl;
   std::cout << "\n";
 }
@@ -75,7 +76,7 @@ void PrintHelp()
 // ---------------------------------------------------------------
 
 vtkMatrix4x4* Load4x4Matrix( std::string filename );
-
+std::vector<float> ConvertColorStringToRGB( std::string colorString );
 
 // ---------------------------------------------------------------
 // Main routine:
@@ -101,6 +102,8 @@ int main( int argc, char *argv[] )
   std::vector< unsigned int> inputNumberOfTextureFiles;
   std::vector<std::string>   inputTransforms;
   
+  std::vector<std::string>   actorColors;
+  
   bool readingOBJdata = false;
   
   // Initializing renderer:
@@ -116,7 +119,7 @@ int main( int argc, char *argv[] )
   int cnt = 0;
   
   std::cout << "Reading parameters ..." << std::endl;
-  while( (c = getopt( argc, argv, "I:T:t:n:e:h?" )) != -1 )
+  while( (c = getopt( argc, argv, "I:T:t:n:e:c:h?" )) != -1 )
   {
     switch( c )
     {
@@ -126,7 +129,7 @@ int main( int argc, char *argv[] )
         for( ; optind < argc && *argv[optind] != '-'; optind++, cnt++ )
         {
           inputFilenames.push_back( argv[optind] );
-          std::cout << "  Mesh [" << cnt << "] = " << argv[optind] << std::endl;
+          std::cout << "  Mesh [" << cnt << "]:                  " << argv[optind] << std::endl;
         }
         break;
       case 'T':
@@ -135,7 +138,7 @@ int main( int argc, char *argv[] )
         for( ; optind < argc && *argv[optind] != '-'; optind++, cnt++ )
         {
           inputTransforms.push_back( argv[optind] );
-          std::cout << "  Transform [" << cnt << "] = " << argv[optind] << std::endl;
+          std::cout << "  Transform [" << cnt << "]:             " << argv[optind] << std::endl;
         }
         break;
       case 't':
@@ -144,7 +147,7 @@ int main( int argc, char *argv[] )
         for( ; optind < argc && *argv[optind] != '-'; optind++, cnt++ )
         {
           inputTextureFilePrefixes.push_back( argv[optind] );
-          std::cout << "  Texture file prefix [" << cnt << "] = " << argv[optind] << std::endl;
+          std::cout << "  Texture file prefix [" << cnt << "]:   " << argv[optind] << std::endl;
         }
         break;
       case 'e':
@@ -153,7 +156,7 @@ int main( int argc, char *argv[] )
         for( ; optind < argc && *argv[optind] != '-'; optind++, cnt++ )
         {
           inputTextureFilePostfixes.push_back( argv[optind] );
-          std::cout << "  Texture file postfix [" << cnt << "] = " << argv[optind] << std::endl;
+          std::cout << "  Texture file postfix [" << cnt << "]:  " << argv[optind] << std::endl;
         }
         break;
       case 'n':
@@ -162,7 +165,16 @@ int main( int argc, char *argv[] )
         for( ; optind < argc && *argv[optind] != '-'; optind++, cnt++ )
         {
           inputNumberOfTextureFiles.push_back( atoi(argv[optind]) );
-          std::cout << "  Number of texture files [" << cnt << "] = " << argv[optind] << std::endl;
+          std::cout << "  Number of texture files [" << cnt << "]: " << argv[optind] << std::endl;
+        }
+        break;
+      case 'c':
+        optind--;
+        cnt = 0;
+        for( ; optind < argc && *argv[optind] != '-'; optind++, cnt++ )
+        {
+          actorColors.push_back( argv[optind] );
+          std::cout << "  Actor color [" << cnt << "]:             " << argv[optind] << std::endl;
         }
         break;
       case 'h':
@@ -208,7 +220,7 @@ int main( int argc, char *argv[] )
       currentPolyData->DeepCopy( polyDataReader->GetOutput() );
       polyDataCollection->AddItem( currentPolyData );
       
-      if( !inputTransforms.empty() )
+      if( !inputTransforms.empty() && std::strcmp( inputTransforms[iFilenames].c_str(), "NONE" ) )
       {
         vtkSmartPointer<vtkMatrix4x4> currentTransformMatrix = Load4x4Matrix( inputTransforms[iFilenames] );
         
@@ -256,7 +268,6 @@ int main( int argc, char *argv[] )
       //currentPolyData->DeepCopy( objReader.GetPolyData() );
       renderer->AddActor( objReader.GetActor() );
     }
-
   }
   
   // -------------------------------------------------------------
@@ -276,6 +287,12 @@ int main( int argc, char *argv[] )
     
       vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
       actor->SetMapper( mapper );
+      
+      if( !actorColors.empty() )
+      {
+        std::vector<float> colorRGB = ConvertColorStringToRGB( actorColors[iFilenames] );
+        actor->GetProperty()->SetColor( colorRGB[0], colorRGB[1], colorRGB[2] );
+      }
     
       renderer->AddActor( actor );
     }
@@ -439,4 +456,30 @@ vtkMatrix4x4* Load4x4Matrix( std::string filename )
   
   std::cout << *mat << std::endl;
   return mat;
+}
+
+std::vector<float> ConvertColorStringToRGB( std::string colorString )
+{
+  std::vector<float> RGBValue(3);
+  
+  if( std::strcmp( colorString.c_str(), "r" ) == 0 )
+  {
+    RGBValue[0] = 1.0;
+    RGBValue[1] = 0.0;
+    RGBValue[2] = 0.0;
+  }
+  else if( std::strcmp( colorString.c_str(), "g" ) == 0 )
+  {
+    RGBValue[0] = 0.0;
+    RGBValue[1] = 1.0;
+    RGBValue[2] = 0.0;
+  }
+  if( std::strcmp( colorString.c_str(), "b" ) == 0 )
+  {
+    RGBValue[0] = 0.0;
+    RGBValue[1] = 0.0;
+    RGBValue[2] = 1.0;
+  }
+  
+  return RGBValue;
 }

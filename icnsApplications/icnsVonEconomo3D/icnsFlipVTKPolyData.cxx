@@ -27,7 +27,6 @@ extern "C"
 
 // Project includes:
 #include "vtkTexturingHelper.h"
-#include "vtkOBJWriter.h"
 
 // ---------------------------------------------------------------
 // Print help routine:
@@ -235,28 +234,12 @@ int main( int argc, char *argv[] )
     std::cout << "----------------------------------------" << std::endl;
     std::cout << "Writing output mesh ... " << std::flush;
     
-    if( outputMeshFilename.substr( outputMeshFilename.find_last_of(".") + 1) == "vtk" )
-    {
-      std::cout << "[VTK data] ..." << std::flush;
-    
-      vtkSmartPointer<vtkPolyDataWriter> vtkWriter = vtkSmartPointer<vtkPolyDataWriter>::New();
-      vtkWriter->SetInputData( outputPolyData );
-      vtkWriter->SetFileName( outputMeshFilename.c_str() );
-      vtkWriter->Write();
+    vtkSmartPointer<vtkPolyDataWriter> vtkWriter = vtkSmartPointer<vtkPolyDataWriter>::New();
+    vtkWriter->SetInputData( outputPolyData );
+    vtkWriter->SetFileName( outputMeshFilename.c_str() );
+    vtkWriter->Write();
       
-      std::cout << "OK." << std::endl;
-    }
-    else
-    {
-      std::cout << "[OBJ data] ..." << std::flush;
-    
-      vtkSmartPointer<vtkOBJWriter> objWriter = vtkSmartPointer<vtkOBJWriter>::New();
-      objWriter->SetInputData( outputPolyData );
-      objWriter->SetFileName( outputMeshFilename.c_str() );
-      objWriter->Update();
-      
-      std::cout << "OK." << std::endl;
-    }
+    std::cout << "OK." << std::endl;
   }
   
   if( !outputTransformationFilename.empty() )

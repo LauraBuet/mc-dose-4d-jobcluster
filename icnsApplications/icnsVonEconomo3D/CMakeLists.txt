@@ -34,23 +34,21 @@ ADD_EXECUTABLE(icnsViewVTKPolyData MACOSX_BUNDLE icnsViewVTKPolyData.cxx vtkText
 
 # Surface model manipulation functionality:
 
-ADD_EXECUTABLE(icnsFlipVTKPolyData MACOSX_BUNDLE icnsFlipVTKPolyData.cxx vtkTexturingHelper.h vtkTexturingHelper.cpp vtkOBJWriter.h vtkOBJWriter.cxx)
+ADD_EXECUTABLE(icnsAppendVTKPolyData MACOSX_BUNDLE icnsAppendVTKPolyData.cxx vtkTexturingHelper.h vtkTexturingHelper.cpp)
+ADD_EXECUTABLE(icnsFlipVTKPolyData MACOSX_BUNDLE icnsFlipVTKPolyData.cxx vtkTexturingHelper.h vtkTexturingHelper.cpp)
+ADD_EXECUTABLE(icnsTransferVTKPolyDataScalars MACOSX_BUNDLE icnsTransferVTKPolyDataScalars.cxx vtkTexturingHelper.h vtkTexturingHelper.cpp)
  
 # Define libraries to link:
 
-if(VTK_LIBRARIES)
-  target_link_libraries(icnsVonEconomo ${VTK_LIBRARIES})
-  target_link_libraries(icnsVE3D_defineLandmarks ${VTK_LIBRARIES})
-  target_link_libraries(icnsManualSurfaceRegistration ${VTK_LIBRARIES})
-  target_link_libraries(icnsLandmarkBasedSurfaceRegistration ${VTK_LIBRARIES})
-  target_link_libraries(icnsICPBasedSurfaceRegistration ${VTK_LIBRARIES})
-  target_link_libraries(icnsViewVTKPolyData ${VTK_LIBRARIES})
-  target_link_libraries(icnsFlipVTKPolyData ${VTK_LIBRARIES})
-else()
-  target_link_libraries(icnsVonEconomo vtkHybrid vtkWidgets)
-  target_link_libraries(icnsVE3D_defineLandmarks vtkHybrid vtkWidgets)
-  target_link_libraries(icnsICPBasedSurfaceRegistration vtkHybrid vtkWidgets)
-  target_link_libraries(icnsLandmarkBasedSurfaceRegistration vtkHybrid vtkWidgets)
-  target_link_libraries(icnsViewVTKPolyData vtkHybrid vtkWidgets)
-  target_link_libraries(icnsFlipVTKPolyData vtkHybrid vtkWidgets)
-endif()
+target_link_libraries(icnsViewVTKPolyData ${VTK_LIBRARIES})
+
+target_link_libraries(icnsAppendVTKPolyData ${VTK_LIBRARIES})
+target_link_libraries(icnsFlipVTKPolyData ${VTK_LIBRARIES})
+target_link_libraries(icnsTransferVTKPolyDataScalars ${VTK_LIBRARIES})
+
+target_link_libraries(icnsManualSurfaceRegistration ${VTK_LIBRARIES})
+target_link_libraries(icnsLandmarkBasedSurfaceRegistration ${VTK_LIBRARIES})
+target_link_libraries(icnsICPBasedSurfaceRegistration ${VTK_LIBRARIES})
+
+target_link_libraries(icnsVonEconomo ${VTK_LIBRARIES})
+target_link_libraries(icnsVE3D_defineLandmarks ${VTK_LIBRARIES})

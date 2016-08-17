@@ -53,12 +53,12 @@ extern "C"
 
 void PrintHelp()
 {
-  std::cout << "\n";
-  std::cout << "Usage :\n";
+  std::cout << std::endl;
+  std::cout << "Usage:" << std::endl;
   std::cout << "icnsManualSurfaceRegistration -F <fixed vtk mesh> -M <moving vtk mesh> [...]\n" << std::endl;
   std::cout << std::endl;
   std::cout << "INPUT DATA" << std::endl;
-  std::cout << "--------------------------------" << std::endl;
+  std::cout << "-----------------------------------------------------" << std::endl;
   std::cout << "-I <list of surface meshes>         IN: Filename list of meshes to be displayed and transformed." << std::endl;
   std::cout << "                                        Possible endings: VTK or OBJ." << std::endl;
   std::cout << "-T <list of transformations>        IN: Filename list of initial transformations (4x4 matrix)" << std::endl;
@@ -68,14 +68,14 @@ void PrintHelp()
   std::cout << "-n <number of texture files>        IN: Number of texture files."  << std::endl;
   std::cout << std::endl;
   std::cout << "OUTPUT DATA" << std::endl;
-  std::cout << "--------------------------------" << std::endl;
+  std::cout << "-----------------------------------------------------" << std::endl;
   std::cout << "-O <list of surface meshes>         OUT: Filename list of output meshes (only VTK)." << std::endl;
   std::cout << "-W <list of transformations>        OUT: Filename lust of transformations."  << std::endl;
   std::cout << "                                         NB: If initial transformations are given, the output" << std::endl;
   std::cout << "                                         will be a concat of the initial and the actual tranform." << std::endl ;
   std::cout << std::endl;
-  std::cout << "-h                                  Print this help.\n";
-  std::cout << "\n";
+  std::cout << "-h                                  Print this help." << std::endl;
+  std::cout << std::endl;
 }
 
 // ---------------------------------------------------------------
