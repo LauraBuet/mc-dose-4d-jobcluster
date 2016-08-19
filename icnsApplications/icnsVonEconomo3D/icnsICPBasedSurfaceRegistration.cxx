@@ -78,9 +78,9 @@ int main( int argc, char *argv[] )
   }
   
   std::cout << std::endl;
-  std::cout << "========================================" << std::endl;
-  std::cout << "icnsICPBasedSurfaceRegistration" << std::endl;
-  std::cout << "----------------------------------------" << std::endl;
+  std::cout << "==========================================" << std::endl;
+  std::cout << "icnsICPBasedSurfaceRegistration"            << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
   
   // -------------------------------------------------------------
   // Initializing parameters with default values:
@@ -162,7 +162,7 @@ int main( int argc, char *argv[] )
   vtkSmartPointer<vtkPolyData> fixedMesh;
   vtkSmartPointer<vtkPolyData> movingMesh;
   
-  std::cout << "----------------------------------------" << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
   std::cout << "Loading fixed mesh ... " << std::flush;
   
   vtkSmartPointer<vtkPolyDataReader> fixedMeshReader;
@@ -232,8 +232,8 @@ int main( int argc, char *argv[] )
   // -------------------------------------------------------------
   // Performing ICP transformation:
   
-  std::cout << "----------------------------------------" << std::endl;
-  std::cout << "Preparing ICP filter ... " << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
+  std::cout << "Preparing ICP filter ... "                  << std::endl;
   
   vtkSmartPointer<vtkIterativeClosestPointTransform> icp = vtkSmartPointer<vtkIterativeClosestPointTransform>::New();
   
@@ -253,6 +253,7 @@ int main( int argc, char *argv[] )
   icp->SetCheckMeanDistance(1);
   icp->SetMaximumMeanDistance(0.0000001);
   icp->GetLandmarkTransform()->SetModeToRigidBody();
+  //icp->GetLandmarkTransform()->SetModeToAffine();
   icp->Modified();
   icp->Update();
   icp->Inverse();
@@ -265,8 +266,8 @@ int main( int argc, char *argv[] )
   // -------------------------------------------------------------
   // Writing output data:
   
-  std::cout << "----------------------------------------" << std::endl;
-  std::cout << "Writing output image:"                << std::flush;
+  std::cout << "------------------------------------------" << std::endl;
+  std::cout << "Writing output image:"                      << std::flush;
 
   // Writing transformation.
   // Case 1: no input transform given.

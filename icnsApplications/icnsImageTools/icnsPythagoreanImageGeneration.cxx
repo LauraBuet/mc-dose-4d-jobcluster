@@ -43,19 +43,18 @@ ImageType::Pointer HarmonicMeanImageComputation( const std::vector<ImageType::Po
 
 void PrintHelp()
 {
-  std::cout << "\n";
-  std::cout << "Usage:\n";
-  std::cout << "icnsPhythagoreanMeanImageGeneration -I <input file> <input file> [<input file> ... <input file>] <output file> [-o <option>]\n";
-    
-  std::cout << "-I <... input images ...>      Filenames of input images to be averaged.\n";
-  std::cout << "-O <output image>              Filename of output image.\n";
-  std::cout << "-o [0|1|2]                     Averaging option:\n";
-  std::cout << "                                 0: arithmetic mean (default).\n";
-  std::cout << "                                 1: geometric mean (NYI).\n";
-  std::cout << "                                 2: harmonic mean (NYI).\n";
-  
-  std::cout << "-h                             Print this help.\n";
-  std::cout << "\n";
+  std::cout << std::endl;
+  std::cout << "Usage:" << std::endl;
+  std::cout << "icnsPhythagoreanMeanImageGeneration -I <input file> <input file> [<input file> ... <input file>] <output file> [-o <option>]" << std::endl;
+  std::cout << std::endl;
+  std::cout << "-I <... input images ...>      Filenames of input images to be averaged." << std::endl;
+  std::cout << "-O <output image>              Filename of output image." << std::endl;
+  std::cout << "-o [0|1|2]                     Averaging option:" << std::endl;
+  std::cout << "                                 0: arithmetic mean (default)." << std::endl;
+  std::cout << "                                 1: geometric mean (NYI)." << std::endl;
+  std::cout << "                                 2: harmonic mean (NYI)." << std::endl;
+  std::cout << "-h                             Print this help." << std::endl;
+  std::cout << std::endl;
 }
 
 
@@ -71,9 +70,10 @@ int main( int argc, char *argv[] )
     return EXIT_FAILURE;
   }
   
-  std::cout << "========================================" << std::endl;
-  std::cout << "icnsPhythagoreanMeanImageGeneration" << std::endl;
-  std::cout << "========================================" << std::endl;
+  std::cout << std::endl;
+  std::cout << "==========================================" << std::endl;
+  std::cout << "icnsPhythagoreanMeanImageGeneration"        << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
   std::cout << "Reading parameters ... " << std::endl;
   
   // Initializing parameters with default values:

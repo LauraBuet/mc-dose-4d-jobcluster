@@ -103,9 +103,9 @@ int main( int argc, char *argv[] )
   }
   
   std::cout << std::endl;
-  std::cout << "========================================" << std::endl;
-  std::cout << "icnsManualSurfaceRegistration" << std::endl;
-  std::cout << "----------------------------------------" << std::endl;
+  std::cout << "==========================================" << std::endl;
+  std::cout << "icnsManualSurfaceRegistration             " << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
   
   // -------------------------------------------------------------
   // Initializing parameters with default values:
@@ -203,8 +203,7 @@ int main( int argc, char *argv[] )
       case 'h':
       case '?':
         PrintHelp();
-        return EXIT_FAILURE;
-        break;
+        return EXIT_SUCCESS;
       default:
         std::cout << "  Argument " << (char)c << " not processed!\n" << std::endl;
         return EXIT_FAILURE;

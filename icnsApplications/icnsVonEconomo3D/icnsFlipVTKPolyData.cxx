@@ -36,16 +36,14 @@ void PrintHelp()
 {
   std::cout << "\n";
   std::cout << "Usage :\n";
-  std::cout << "icnsFlipVTKPolyData -I <input vtk mesh> -O <output vtk mesh> -T <transformation>\n" << std::endl;
-    
+  std::cout << "icnsFlipVTKPolyData -I <input vtk mesh> -O <output vtk mesh> -T <transformation>" << std::endl;
+  std::cout << std::endl;
   std::cout << "-I <input vtk mesh>            Filename of the mesh to be flipped." << std::endl;
   std::cout << "-O <output vtk mesh>           Filename of the mesh to be written." << std::endl;
   std::cout << "-W <output transformation>     Filename of transformation to be written." << std::endl;
-    
   std::cout << "-x                             Flip along x-axis." << std::endl;
   std::cout << "-y                             Flip along y-axis." << std::endl;
   std::cout << "-z                             Flip along z-axis." << std::endl;
-    
   std::cout << "-h                             Print this help." << std::endl;
   std::cout << std::endl;
 }
@@ -68,11 +66,12 @@ int main( int argc, char *argv[] )
     return EXIT_FAILURE;
   }
   
-  std::cout << " "                                        << std::endl;
-  std::cout << "========================================" << std::endl;
-  std::cout << "icnsFlipVTKPolyData"                      << std::endl;
-  std::cout << "----------------------------------------" << std::endl;
-  std::cout << "Reading parameters ..."                   << std::endl;
+  std::cout << std::endl;
+  std::cout << "==========================================" << std::endl;
+  std::cout << "icnsFlipVTKPolyData"                        << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
+  
+  std::cout << "Reading parameters ... " << std::endl;
     
   // Initializing parameters with default values:
   
@@ -151,8 +150,8 @@ int main( int argc, char *argv[] )
   // -------------------------------------------------------------
   // Reading input file:
     
-  std::cout << "----------------------------------------" << std::endl;
-  std::cout << "Loading input mesh ... " << std::flush;
+  std::cout << "------------------------------------------" << std::endl;
+  std::cout << "Loading input mesh ...                    " << std::flush;
     
   vtkSmartPointer<vtkPolyData> inputPolyData = vtkSmartPointer<vtkPolyData>::New();
   vtkSmartPointer<vtkMatrix4x4> inputTransformationMatrix;
@@ -203,8 +202,8 @@ int main( int argc, char *argv[] )
   // Flip input polydata using vtkTransformPolyData.
   // First, define the appropriate transformation:
   
-  std::cout << "----------------------------------------" << std::endl;
-  std::cout << "Flipping data ... "                       << std::flush;
+  std::cout << "------------------------------------------" << std::endl;
+  std::cout << "Flipping data ... "                         << std::flush;
   
   vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
   transform->Scale( flippingAxis[0], flippingAxis[1], flippingAxis[2] );
@@ -231,8 +230,8 @@ int main( int argc, char *argv[] )
   
   if( !outputMeshFilename.empty() )
   {
-    std::cout << "----------------------------------------" << std::endl;
-    std::cout << "Writing output mesh ... " << std::flush;
+    std::cout << "------------------------------------------" << std::endl;
+    std::cout << "Writing output mesh ... "                   << std::flush;
     
     vtkSmartPointer<vtkPolyDataWriter> vtkWriter = vtkSmartPointer<vtkPolyDataWriter>::New();
     vtkWriter->SetInputData( outputPolyData );
@@ -244,8 +243,8 @@ int main( int argc, char *argv[] )
   
   if( !outputTransformationFilename.empty() )
   {
-    std::cout << "----------------------------------------" << std::endl;
-    std::cout << "Writing output transformation ... " << std::flush;
+    std::cout << "------------------------------------------" << std::endl;
+    std::cout << "Writing output transformation ... "         << std::flush;
     
     vtkSmartPointer<vtkMatrix4x4> transformMatrix = transform->GetMatrix();
     if( !inputTransformationFilename.empty())
@@ -270,9 +269,9 @@ int main( int argc, char *argv[] )
     std::cout << "OK." << std::endl;
   }
   
-  std::cout << "----------------------------------------" << std::endl;
-  std::cout << "icnsFlipVTKPolyData::Finished!"           << std::endl;
-  std::cout << "========================================" << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
+  std::cout << "icnsFlipVTKPolyData::Finished!"             << std::endl;
+  std::cout << "==========================================" << std::endl;
   
   return EXIT_SUCCESS;
 }

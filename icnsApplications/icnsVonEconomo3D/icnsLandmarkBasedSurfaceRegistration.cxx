@@ -99,8 +99,8 @@ int main( int argc, char *argv[] )
   }
   
   std::cout << "==========================================" << std::endl;
-  std::cout << "icnsLandmarkBasedSurfaceRegistration" << std::endl;
-  std::cout << "==========================================" << std::endl;
+  std::cout << "icnsLandmarkBasedSurfaceRegistration      " << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
   
   // -------------------------------------------------------------
   // Initializing parameters with default values:

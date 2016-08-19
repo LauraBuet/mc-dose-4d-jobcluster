@@ -33,18 +33,17 @@ typedef itk::ChangeInformationImageFilter<ImageType>  ChangeImageInformationFilt
 
 void PrintHelp()
 {
-    std::cout << "\n";
-    std::cout << "Usage:\n";
-    std::cout << "icnsImageCropping -I <input image> -O <output image> "
-                 "-s <x-size> <y-size> <z-size> [-i <x-index> <y-index> <z-index>]\n\n";
-    
-    std::cout << "-I <input image>               Filename of input image.\n";
-    std::cout << "-O <output image>              Filename of output image.\n";
-    std::cout << "-i <x> <y> <z>                 Starting index of cropping region.\n";
-    std::cout << "-s <x> <y> <z>                 Size of cropping region.\n";
-  
-    std::cout << "-h                             Print this help.\n";
-    std::cout << "\n";
+  std::cout << std::endl;
+  std::cout << "Usage:" << std::endl;
+  std::cout << "icnsImageCropping -I <input image> -O <output image> "
+               "-s <x-size> <y-size> <z-size> [-i <x-index> <y-index> <z-index>]" << std::endl;
+  std::cout << std::endl;
+  std::cout << "-I <input image>               Filename of input image." << std::endl;
+  std::cout << "-O <output image>              Filename of output image." << std::endl;
+  std::cout << "-i <x> <y> <z>                 Starting index of cropping region." << std::endl;
+  std::cout << "-s <x> <y> <z>                 Size of cropping region." << std::endl;
+  std::cout << "-h                             Print this help." << std::endl;
+  std::cout << std::endl;
 }
 
 
@@ -60,9 +59,10 @@ int main( int argc, char *argv[] )
     return EXIT_FAILURE;
   }
   
+  std::cout << std::endl;
   std::cout << "========================================" << std::endl;
   std::cout << "icnsImageCropping" << std::endl;
-  std::cout << "========================================" << std::endl;
+  std::cout << "----------------------------------------" << std::endl;
   std::cout << "Reading parameters ... " << std::endl;
   
   // Initializing parameters with default values:

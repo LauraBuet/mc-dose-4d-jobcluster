@@ -39,20 +39,19 @@ typedef itk::BSplineInterpolateImageFunction<ImageType>         BSplineInterpola
 
 void PrintHelp()
 {
-    std::cout << "\n";
-    std::cout << "Usage :\n";
-    std::cout << "icnsAffineImageRegistration -I <input image> -T <transformation> -O  <transformed image> [-i <interpolation approach]\n\n";
-    
-    std::cout << "-I <input image>               Filename of the input image.\n";
-    std::cout << "-T <transformation>            Transformation filename.\n";
-    std::cout << "-O <output image>              Filename of the output (=transformed) image.\n";
-    std::cout << "-i [0|1|2]                     Interpolation approach.\n";
-    std::cout << "                                 0: nearest neighbor (choose for binary data!).\n";
-    std::cout << "                                 1: linear (default).\n";
-    std::cout << "                                 2: cubic B-splines.\n";
-  
-    std::cout << "-h                             Print this help.\n";
-    std::cout << "\n";
+  std::cout << std::endl;
+  std::cout << "Usage:" << std::endl;
+  std::cout << "icnsAffineImageTransformation -I <input image> -T <transformation> -O  <transformed image> [-i <interpolation approach]" << std::endl;
+  std::cout << std::endl;
+  std::cout << "-I <input image>               Filename of the input image." << std::endl;
+  std::cout << "-T <transformation>            Transformation filename." << std::endl;
+  std::cout << "-O <output image>              Filename of the output (=transformed) image." << std::endl;
+  std::cout << "-i [0|1|2]                     Interpolation approach." << std::endl;
+  std::cout << "                                 0: nearest neighbor (choose for binary data!)." << std::endl;
+  std::cout << "                                 1: linear (default)." << std::endl;
+  std::cout << "                                 2: cubic B-splines." << std::endl;
+  std::cout << "-h                             Print this help." << std::endl;
+  std::cout << std::endl;
 }
 
 
@@ -68,9 +67,10 @@ int main( int argc, char *argv[] )
     return EXIT_FAILURE;
   }
   
-  std::cout << "========================================" << std::endl;
-  std::cout << "icnsAffineRegistration         " << std::endl;
-  std::cout << "========================================" << std::endl;
+  std::cout << std::endl;
+  std::cout << "==========================================" << std::endl;
+  std::cout << "icnsAffineTransformation                  " << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
   std::cout << "Reading parameters ..." << std::endl;
   
   // Initializing parameters with default values:
@@ -119,8 +119,7 @@ int main( int argc, char *argv[] )
       case 'h':
       case '?':
         PrintHelp();
-        return EXIT_FAILURE;
-        break;
+        return EXIT_SUCCESS;
       default:
         std::cout << "  Argument " << (char)c << " not processed!\n" << std::endl;
         return EXIT_FAILURE;

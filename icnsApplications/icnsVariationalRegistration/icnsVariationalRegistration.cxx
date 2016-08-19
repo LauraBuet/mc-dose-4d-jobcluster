@@ -155,11 +155,11 @@ int main( int argc, char *argv[] )
     return EXIT_FAILURE;
   }
   
-  std::cout << " " << std::endl;
+  std::cout << std::endl;
   std::cout << "==========================================" << std::endl;
   std::cout << "icnsVariationalRegistration"                << std::endl;
-  std::cout << "==========================================" << std::endl;
-  std::cout << "Reading parameters and preparing data ..." << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
+  std::cout << "Reading parameters and preparing data ..."  << std::endl;
   
   // Input / output data
   char* fixedImageFilename               = NULL;
