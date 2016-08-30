@@ -16,7 +16,23 @@ include(${VTK_USE_FILE})
 #  ${VTK_LIBRARIES}
 #)
 
-# Set executable:
+# -------------------------------------------------
+# Define project sources:
+
+SET( icnsDiffusionSurfaceRegistration_SRCS 
+  icnsSurfaceConstrainedDiffusionRegistrationMain.cxx
+  icnsSurfaceRegistrationFilter.h
+  icnsSurfaceRegistrationFilter.cpp
+  icnsSurfaceConstrainedDiffusionRegistrationFilter.h
+  icnsSurfaceConstrainedDiffusionRegistrationFilter.cpp
+  icnsSymmetricSurfaceConstrainedDiffusionRegistrationFilter.h
+  icnsSymmetricSurfaceConstrainedDiffusionRegistrationFilter.cpp
+  icnsImageThreads.h
+  icnsImageThreads.cxx
+)
+
+# -------------------------------------------------
+# Define executables:
 # VE3D core executables:
 
 ADD_EXECUTABLE(icnsVonEconomo MACOSX_BUNDLE icnsVonEconomo.cxx)
@@ -27,6 +43,7 @@ ADD_EXECUTABLE(icnsVE3D_defineLandmarks MACOSX_BUNDLE icnsVE3D_defineLandmarks.c
 ADD_EXECUTABLE(icnsManualSurfaceRegistration MACOSX_BUNDLE icnsManualSurfaceRegistration.cxx vtkTexturingHelper.h vtkTexturingHelper.cpp)
 ADD_EXECUTABLE(icnsLandmarkBasedSurfaceRegistration MACOSX_BUNDLE icnsLandmarkBasedSurfaceRegistration.cxx vtkTexturingHelper.h vtkTexturingHelper.cpp)
 ADD_EXECUTABLE(icnsICPBasedSurfaceRegistration MACOSX_BUNDLE icnsICPBasedSurfaceRegistration.cxx vtkTexturingHelper.h vtkTexturingHelper.cpp)
+ADD_EXECUTABLE(icnsSurfaceConstrainedDiffusionRegistration MACOSX_BUNDLE ${icnsDiffusionSurfaceRegistration_SRCS} )
 
 # Surface model viewer functionality:
 
@@ -49,6 +66,7 @@ target_link_libraries(icnsTransferVTKPolyDataScalars ${VTK_LIBRARIES})
 target_link_libraries(icnsManualSurfaceRegistration ${VTK_LIBRARIES})
 target_link_libraries(icnsLandmarkBasedSurfaceRegistration ${VTK_LIBRARIES})
 target_link_libraries(icnsICPBasedSurfaceRegistration ${VTK_LIBRARIES})
+target_link_libraries(icnsSurfaceConstrainedDiffusionRegistration ${VTK_LIBRARIES})
 
 target_link_libraries(icnsVonEconomo ${VTK_LIBRARIES})
 target_link_libraries(icnsVE3D_defineLandmarks ${VTK_LIBRARIES})
