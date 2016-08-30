@@ -8,6 +8,7 @@
 SUBDIRS(
   icnsImageTools
   icnsRobustPCA
+  icnsSurrogateBasedMotionPrediction
   icnsVariationalRegistration
   icnsVectorFieldTools
   icnsVisualizationTools
