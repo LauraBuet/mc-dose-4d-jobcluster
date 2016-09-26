@@ -225,15 +225,15 @@ int main( int argc, char *argv[] )
   }
   
 /*
-  imiINFO("--------------------------------------");
-  imiINFO("RESULTS:");
-  imiINFO("       DICE : "<<calculateOverlapMeasures->GetDiceCoefficient() );
-  imiINFO("    JACCARD : "<<calculateOverlapMeasures->GetJaccardCoefficient() );
-  imiINFO("   Center A : "<<calculateOverlapMeasures->GetCenter1() );
-  imiINFO("   Center B : "<<calculateOverlapMeasures->GetCenter2() );
-  imiINFO(" CenterDiff : "<<calculateOverlapMeasures->GetCenterDistance() );
-  imiINFO("   Volume A : "<<calculateOverlapMeasures->GetNumberOfVoxels1() <<" ( "<<calculateOverlapMeasures->GetVolume1()<<" cm^3 )" );
-  imiINFO("   Volume B : "<<calculateOverlapMeasures->GetNumberOfVoxels2() <<" ( "<<calculateOverlapMeasures->GetVolume2()<<" cm^3 )" );
+  std::cout << "--------------------------------------");
+  std::cout << "RESULTS:");
+  std::cout << "       DICE : "<<calculateOverlapMeasures->GetDiceCoefficient() );
+  std::cout << "    JACCARD : "<<calculateOverlapMeasures->GetJaccardCoefficient() );
+  std::cout << "   Center A : "<<calculateOverlapMeasures->GetCenter1() );
+  std::cout << "   Center B : "<<calculateOverlapMeasures->GetCenter2() );
+  std::cout << " CenterDiff : "<<calculateOverlapMeasures->GetCenterDistance() );
+  std::cout << "   Volume A : "<<calculateOverlapMeasures->GetNumberOfVoxels1() <<" ( "<<calculateOverlapMeasures->GetVolume1()<<" cm^3 )" );
+  std::cout << "   Volume B : "<<calculateOverlapMeasures->GetNumberOfVoxels2() <<" ( "<<calculateOverlapMeasures->GetVolume2()<<" cm^3 )" );
 
   if(!bComputeHausdorffDistance)
   {
@@ -261,7 +261,7 @@ int main( int argc, char *argv[] )
 
     double hausdorffDistance = hausdorffDistanceFilter->GetHausdorffDistance();
 
-    imiINFO("   Hausdorff: "<<hausdorffDistance);
+    std::cout << "   Hausdorff: "<<hausdorffDistance);
 
     // Open log file if necessary.
     if( logFilename != NULL )

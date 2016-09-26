@@ -8,6 +8,7 @@
 // System includes:
 #include <time.h>
 #include <iostream>
+#include <iomanip> // for setprecision
 #include <fstream>
 #include <string>
 #include <numeric>
@@ -88,9 +89,9 @@ int main( int argc, char *argv[] )
     return EXIT_FAILURE;
   }
 
-  std::cout << "================================================" << std::endl;
-  std::cout << "icnsImageRPCADecomposition: Evaluation part" << std::endl;
-  std::cout << "================================================" << std::endl;
+  std::cout << "========================================" << std::endl;
+  std::cout << "icnsImageRPCADecomposition: Evaluation" << std::endl;
+  std::cout << "----------------------------------------" << std::endl;
   std::cout << "Reading parameters...\n" << std::endl;
 
   // Initializing parameters with default values:
@@ -107,7 +108,7 @@ int main( int argc, char *argv[] )
   std::vector<ImageType::Pointer> lesionSegmentationImages;
   std::vector<ImageType::Pointer> brainSegmentationImages;
   
-  ImagePixelType lowerThreshold = 100;
+  ImagePixelType lowerThreshold = 150;
   ImagePixelType erosionRadius = 1;
   bool useMaskingSparseImage = false;
   bool iterateThreshold = false;
@@ -284,7 +285,8 @@ int main( int argc, char *argv[] )
   
   if( useMaskingSparseImage )
   {
-    std::cout << "Masking sparse images ... " << std::endl;
+    std::cout << "(a) Masking sparse images by eroded brain mask + " << std::endl;
+    std::cout << "(b) setting all negative vals to zero:" << std::endl;
   
     for( unsigned int i = 0; i < sparseImages.size(); i++ )
     {
@@ -334,8 +336,6 @@ int main( int argc, char *argv[] )
       maskedImage->Update();
       maskedImage->DisconnectPipeline();
       sparseImages[i] = maskedImage;
-      
-      std::cout << " OK." << std::endl;
       
       // Kick out negative values:
       ThresholdFilterType::Pointer thresholdFilter = ThresholdFilterType::New();
@@ -387,7 +387,7 @@ int main( int argc, char *argv[] )
     }
   }
   
-  // Iterate over threshold range:
+  // Iterate over threshold range (only, if command line arg 'ITERATE THRESHOLD' is true):
   
   std::vector< float > optimalDiceVals;
   std::vector< float > optimalFPR;
@@ -398,7 +398,7 @@ int main( int argc, char *argv[] )
   ImagePixelType optimalThreshold = -1;
   unsigned int n_ThresholdValues  = 1;
   unsigned int initialThreshold   = 10;
-  unsigned int incrThreshold      = 2;
+  unsigned int incrThreshold      = 1;
   if( iterateThreshold ) n_ThresholdValues = 90;
   
   for( unsigned int currentThresholdIndex = 1; currentThresholdIndex <= n_ThresholdValues; currentThresholdIndex++ )
@@ -466,6 +466,7 @@ int main( int argc, char *argv[] )
       //rescaleFilter->SetOutputMaximum( itk::NumericTraits<ImagePixelType>::max() );
       rescaleFilter->SetOutputMaximum( 1 );
       rescaleFilter->SetInput( keepNObjectsImageFilter->GetOutput() );
+      //rescaleFilter->SetInput( sparseImagesTemp[i] );
       
       try
       {
@@ -541,17 +542,20 @@ int main( int argc, char *argv[] )
       optimalFPR          = falsePositiveRate;
       optimalFNR          = falseNegativeRate;
     }
-  }
+  } // end of loop over thresholds
+  
+  // Assure standardized output:
+  std::cout << std::fixed;
   
   std::cout << "+++++++++++++++++++++++++++++++" << std::endl;
-  std::cout << "BEST TOTAL: " << optimalMeanDiceVal << " +/- " << optimalStdevDiceVal << std::endl;
-  std::cout << "THRESHOLD:  " << optimalThreshold << std::endl;
+  std::cout << "BEST TOTAL: " << std::setprecision(4) << optimalMeanDiceVal << " +/- " << std::setprecision(4) << optimalStdevDiceVal << std::endl;
+  std::cout << "THRESHOLD:  " << std::setprecision(0) << optimalThreshold << std::endl;
   std::cout << "+++++++++++++++++++++++++++++++" << std::endl;
   std::cout << "DICE" << std::endl;
   
   for( unsigned int i = 0; i < sparseImagesTemp.size(); i++ )
   {
-    std::cout << optimalDiceVals[i] << std::endl;
+    std::cout << std::setprecision(4) << optimalDiceVals[i] << std::endl;
   }
   
   std::cout << "+++++++++++++++++++++++++++++++" << std::endl;
@@ -559,7 +563,7 @@ int main( int argc, char *argv[] )
   
   for( unsigned int i = 0; i < sparseImagesTemp.size(); i++ )
   {
-    std::cout << 1-optimalFPR[i] << std::endl;
+    std::cout << std::setprecision(4) << 1-optimalFPR[i] << std::endl;
   }
   
   std::cout << "+++++++++++++++++++++++++++++++" << std::endl;
@@ -567,20 +571,20 @@ int main( int argc, char *argv[] )
   
   for( unsigned int i = 0; i < sparseImagesTemp.size(); i++ )
   {
-    std::cout << 1-optimalFNR[i] << std::endl;
+    std::cout << std::setprecision(4) << 1-optimalFNR[i] << std::endl;
   }
 
   // -------------------------------------------------------------
   // Writing output data:
   // -------------------------------------------------------------
   
-  //std::cout << "----------------------------------------" << std::endl;
-  //std::cout << "Writing output image ... "                << std::endl;
+  std::cout << "----------------------------------------" << std::endl;
+  std::cout << "Writing output images ... "                << std::endl;
   
   ImageWriterType::Pointer imageWriter;
   for( unsigned int i = 0; i < sparseImages.size(); i++ )
   {
-    //std::cout << "  Image [" << i << "] ... " << std::flush;
+    std::cout << "  Image [" << i << "] ... " << std::flush;
     
     imageWriter = ImageWriterType::New();
     imageWriter->SetInput( sparseImagesTemp[i] );
@@ -596,10 +600,8 @@ int main( int argc, char *argv[] )
       std::cerr << excp << std::endl;
       return EXIT_FAILURE;
     }
-    //std::cout << "OK." << std::endl;
+    std::cout << "OK." << std::endl;
   }
-  
-  
 
   // TODO: write logfile
   

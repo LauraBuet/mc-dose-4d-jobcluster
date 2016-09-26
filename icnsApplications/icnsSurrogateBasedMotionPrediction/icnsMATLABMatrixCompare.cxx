@@ -110,8 +110,8 @@ template<class TValueType> bool MatrixCompare( string inputMatrix1Filename, stri
   // check element-wise differences
   //
 
-  //imiINFO("matrix1: "<<matrix1.rows()<<" x "<<matrix1.cols());
-  //imiINFO("matrix2: "<<matrix2.rows()<<" x "<<matrix2.cols());
+  //std::cout << "matrix1: "<<matrix1.rows()<<" x "<<matrix1.cols());
+  //std::cout << "matrix2: "<<matrix2.rows()<<" x "<<matrix2.cols());
 
   double totalDifference=0;
   unsigned int elemCount=matrix1.rows()*matrix1.cols();
@@ -123,7 +123,7 @@ template<class TValueType> bool MatrixCompare( string inputMatrix1Filename, stri
       //actually a bad idea to use fabs(a-b) because of catastrophic cancellation etc.
       const double diff = fabs(matrix1.get(i,j)-matrix2.get(i,j));
 
-      //imiINFO("diff: "<<diff);
+      //std::cout << "diff: "<<diff);
 
       if (diff > diffThreshold)
       {
