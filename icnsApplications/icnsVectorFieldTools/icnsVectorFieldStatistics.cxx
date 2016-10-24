@@ -46,9 +46,9 @@ void PrintHelp()
   std::cout << "Usage:\n";
   std::cout << "icnsVectorFieldStatistics -I <vector field FN> -S <mask image FN> -L <logfile FN> [...]\n";
   std::cout << std::endl;
-  std::cout << "-I <image FN>              [IN] Vector field to analyze." << std::endl;
-  std::cout << "-S <mask image FN>         [IN] Mask image to constrain analysis." << std::endl;
-  std::cout << "-F <logfile FN>            [OUT] Filename of logfile to write." << std::endl;
+  std::cout << "-I <image FN>              [IN] Vector field to analyze." << std::endl;
+  std::cout << "-S <mask image FN>         [IN] Mask image to constrain analysis." << std::endl;
+  std::cout << "-F <logfile FN>            [OUT] Filename of logfile to write." << std::endl;
   std::cout << "-?                         Print this help." << std::endl;
   std::cout << std::endl;
 }
@@ -237,10 +237,10 @@ void ComputeVectorFieldMagnitudeStatistics( const DisplacementFieldType::Pointer
 {
   // Prepare result variables:
   unsigned int nVoxels          = 0;
-  double averageVectorMagnitude = 0.0;
-  double stdVectorMagnitude     = 0.0;
-  double minVectorMagnitude     = 0.0;
-  double maxVectorMagnitude     = 0.0;
+  double averageVectorMagnitude;// = 0.0;
+  double stdVectorMagnitude;//     = 0.0;
+  double minVectorMagnitude;//    = 0.0;
+  double maxVectorMagnitude;//     = 0.0;
   
   // Generate field and image iterators:
   typedef itk::ImageRegionConstIterator< DisplacementFieldType > ConstFieldIteratorType;
@@ -295,10 +295,10 @@ void ComputeVectorFieldComponentStatistics( const DisplacementFieldType::Pointer
 {
   // Prepare result variables:
   unsigned int nVoxels = 0;
-  double averageValue  = 0.0;
-  double stdValue      = 0.0;
-  double minValue      = 0.0;
-  double maxValue      = 0.0;
+  double averageValue;//  = 0.0;
+  double stdValue;//      = 0.0;
+  double minValue;//      = 0.0;
+  double maxValue;//      = 0.0;
   
   // Generate field and image iterators:
   typedef itk::ImageRegionConstIterator< DisplacementFieldType > ConstFieldIteratorType;

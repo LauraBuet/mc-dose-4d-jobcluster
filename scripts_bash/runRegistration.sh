@@ -11,18 +11,26 @@ BUILD_PATH="../../build/bin"
 VARIATIONAL_REGISTRATION="${BUILD_PATH}/icnsVariationalRegistration"
 VECTOR_FIELD_STATISTICS="${BUILD_PATH}/icnsVectorFieldStatistics"
 
+echo '===================================================================='
+echo '===================================================================='
+echo ' Starting bash script'
+echo '===================================================================='
+echo '===================================================================='
+
 # -----------------------------------------
 # Test data:
 
 
 TEST_DATA_INPUT_DIR="/data_l63/tsothman/NAS_RT/4D-CT/Klinische_Endpunkte"
+TEST_DATA_INPUT_DIR_LOKAL="/data_l63/tsothman/ICNS_core/TestData"
 
 SUBDIR_idx=0
 
 
 for dir in "$TEST_DATA_INPUT_DIR"/*
 	do
-    if [[ "$dir" =~ '+motionStat' ]]; then
+        #if [[ "$dir" =~ '+motionStat' ]]; then
+        if [[ "$dir" =~ 'xxx' ]]; then
 		SUBDIR_DATA_PATH[SUBDIR_idx]="$dir"
 		SUBDIR_idx=$((SUBDIR_idx+1))
 	fi
@@ -57,14 +65,14 @@ TEST_ITV="${TEST_DATA_MASTER_DIR}/Motion_Statistics"
 
 TEST_DATA_OUTPUT_DIR="${TEST_DATA_MASTER_DIR}/Motion_Statistics"
 
-for file in "$TEST_DATA_OUTPUT_DIR"/*
-	do
-	if [[ "$file" =~ 'MotionStatistics.txt' ]]; then
-	echo 'deleting old motion statistics'
-	rm "${TEST_DATA_OUTPUT_DIR}/MotionStatistics.txt"
-	echo 'done deleting'
-	fi
-done
+#for file in "$TEST_DATA_OUTPUT_DIR"/*
+#	do
+#	if [[ "$file" =~ 'MotionStatistics.txt' ]]; then
+#	echo 'deleting old motion statistics'
+#	rm "${TEST_DATA_OUTPUT_DIR}/MotionStatistics.txt"
+#	echo 'done deleting'
+#	fi
+#done
 
 TEST_MOTION_FIELD="${TEST_DATA_OUTPUT_DIR}/Displ.mha"
 TEST_WARPED_IMAGE="${TEST_DATA_OUTPUT_DIR}/Warped.mha"
@@ -86,15 +94,18 @@ TEST_LOGFILE="${TEST_DATA_OUTPUT_DIR}/MotionStatistics.txt"
 if [ ! -f $TEST_MOTION_FIELD ]; then
 
 REGISTRATION_CALL="${VARIATIONAL_REGISTRATION} -D ${TEST_4DCT} -y 0 -z 5 -O ${TEST_MOTION_FIELD} -W ${TEST_WARPED_IMAGE}"
+#REGISTRATION_CALL="${VARIATIONAL_REGISTRATION} -F /data_l63/tsothman/ICNS_core/build/TestOutput/TEMP_0.mhd -M /data_l63/tsothman/ICNS_core/build/TestOutput/TEMP_5.mhd -O ${TEST_MOTION_FIELD} -W ${TEST_WARPED_IMAGE}"
 echo $REGISTRATION_CALL
 $REGISTRATION_CALL
 
 fi
 
+#if [ ! -f $TEST_LOGFILE ]; then
 # Then analyze displacement field:
 MOTION_ANALYSIS_CALL="${VECTOR_FIELD_STATISTICS} -I ${TEST_MOTION_FIELD} -S ${ITV_PATH} -L ${TEST_LOGFILE}"
 echo $MOTION_ANALYSIS_CALL
 $MOTION_ANALYSIS_CALL
+#fi
 		fi
 	done
 

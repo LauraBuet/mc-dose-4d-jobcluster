@@ -13,6 +13,11 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <sstream>
+
+#define SSTR( x ) static_cast< std::ostringstream & >( \
+        ( std::ostringstream() << std::dec << x ) ).str()
+
 extern "C"
 {
 #include "getopt.h"
@@ -24,6 +29,10 @@ extern "C"
 #include <itkImageSeriesReader.h>
 #include <itkGDCMImageIO.h>
 #include <itkGDCMSeriesFileNames.h>
+#include <itkExtractImageFilter.h>
+#include "itkFlipImageFilter.h"
+#include <itkObjectFactory.h>
+#include "itkChangeInformationImageFilter.h"
 
 #include <itkConfigure.h>
 #include <itkExponentialDisplacementFieldImageFilter.h>
@@ -79,8 +88,8 @@ void PrintHelp()
   std::cout << "Usage icnsVariationalRegistration:\n";
   std::cout << "icnsVariationalRegistration -F <fixed image FN> -M <moving image FN> -O <output field FN> [...]\n\n";
   std::cout << std::endl;
-  std::cout << "-F <image FN>              [IN] Filename of the FIXED image." << std::endl;
-  std::cout << "-M <image FN>              [IN] Filename of the MOVING image." << std::endl;
+  std::cout << "-F <image FN>              [IN] Filename of the FIXED image." << std::endl;
+  std::cout << "-M <image FN>              [IN] Filename of the MOVING image." << std::endl;
   std::cout << "-D <4DCT directory name>   [IN] Directory of 4D data to read." << std::endl;
   std::cout << "-S <segmentation mask>     [IN] Filename of registration mask image (optional)." << std::endl;
   std::cout << "-I <initial vector field>  [IN] Filename of initial deformation field (optional)." << std::endl;
@@ -465,7 +474,7 @@ int main( int argc, char *argv[] )
   ImageType::Pointer fixedImage;
   ImageType::Pointer movingImage;
   std::vector<ImageType::Pointer> temporalImageSequence;
-  
+
   MaskImageType::Pointer maskImage;
   DisplacementFieldType::Pointer initialDisplacementField;
   
@@ -498,7 +507,7 @@ int main( int argc, char *argv[] )
     fixedImage->DisconnectPipeline();
     std::cout << "OK." << std::endl;
   
-    std::cout << "  Moving image ... " << std::flush;
+    std::cout << "  -> Moving image ... " << std::flush;
     ImageReaderType::Pointer movingImageReader = ImageReaderType::New();
     movingImageReader->SetFileName( movingImageFilename );
     try
@@ -511,7 +520,7 @@ int main( int argc, char *argv[] )
       std::cerr << excp << std::endl;
       return EXIT_FAILURE;
     }
-    ImageType::Pointer movingImage = movingImageReader->GetOutput();
+    movingImage = movingImageReader->GetOutput();
     movingImage->Update();
     movingImage->DisconnectPipeline();
     std::cout << "OK." << std::endl;
@@ -919,6 +928,7 @@ int main( int argc, char *argv[] )
 std::vector<ImageType::Pointer> ReadTemporalImageSequence( char* directoryFN )
 {
   std::vector<ImageType::Pointer> temporalImageSequence;
+  std::vector<ImageType::Pointer> splitTemporalImageSequence;
   
   // Generate reader:
   
@@ -930,12 +940,12 @@ std::vector<ImageType::Pointer> ReadTemporalImageSequence( char* directoryFN )
   
   NamesGeneratorType::Pointer namesGenerator = NamesGeneratorType::New();
   namesGenerator->SetDirectory( directoryFN );
-  
+     
   typedef std::vector<std::string> SeriesIDContainer;
   const SeriesIDContainer& seriesUID = namesGenerator->GetSeriesUIDs();
   SeriesIDContainer::const_iterator seriesItr = seriesUID.begin();
   SeriesIDContainer::const_iterator seriesEnd = seriesUID.end();
-  
+
   std::vector<std::string> filenames;
   while( seriesItr != seriesEnd )
   {
@@ -969,6 +979,148 @@ std::vector<ImageType::Pointer> ReadTemporalImageSequence( char* directoryFN )
     std::cout << "OK" << std::endl;
     seriesItr++;
   }
-  
+
+  // ---
+
+  if( temporalImageSequence.size() == 1 )
+  {
+    std::cout << "Cannot find 11 4DCT-timepoints: Sorting 4DCT-Data..." << std::endl;
+    //std::cout << temporalImageSequence[0]->GetDirection() << std::endl;
+
+    typedef itk::FlipImageFilter< ImageType > flipImageFilterType;
+
+
+    typedef flipImageFilterType::FlipAxesArrayType FlipAxesArrayType;
+    FlipAxesArrayType flipAxes;
+
+    unsigned int nNumberofPhases = 11;
+    for( unsigned int iNumberOfPhases = 0; iNumberOfPhases < nNumberofPhases; iNumberOfPhases++)
+    {
+
+    flipImageFilterType::Pointer flipImageFilter = flipImageFilterType::New();
+    ImageType::IndexType desiredStart;
+    desiredStart[0] = 0;
+    desiredStart[1] = 0;
+    desiredStart[2] = iNumberOfPhases * ( filenames.size() / nNumberofPhases );
+
+    ImageType::SizeType desiredSize;
+    desiredSize[0] = temporalImageSequence[0]->GetLargestPossibleRegion().GetSize()[0];
+    desiredSize[1] = temporalImageSequence[0]->GetLargestPossibleRegion().GetSize()[1];
+    desiredSize[2] = temporalImageSequence[0]->GetLargestPossibleRegion().GetSize()[2] / nNumberofPhases;
+
+    ImageType::RegionType desiredRegion(desiredStart, desiredSize);
+    //std::cout << "desiredRegion: " << desiredRegion << std::endl;
+
+    typedef itk::ExtractImageFilter< ImageType, ImageType > ExtractImageFilterType;
+    ExtractImageFilterType::Pointer extractImagefilter = ExtractImageFilterType::New();
+
+    extractImagefilter->SetExtractionRegion( desiredRegion );
+    extractImagefilter->SetInput( temporalImageSequence[0] );
+    extractImagefilter->SetDirectionCollapseToIdentity();
+    extractImagefilter->Update();
+    ImageType::Pointer input = extractImagefilter->GetOutput();
+    input->Update();
+
+    flipImageFilter->SetInput( input );
+
+    flipAxes[0] = 0;
+    flipAxes[1] = 0;
+    flipAxes[2] = 1;
+
+    flipImageFilter->SetFlipAxes(flipAxes);
+    flipImageFilter->Update();
+
+    typedef itk::ChangeInformationImageFilter< ImageType > ChangeInformationImageFilterType;
+    ChangeInformationImageFilterType::Pointer changeInformationImageFilter = ChangeInformationImageFilterType::New();
+
+    changeInformationImageFilter->SetInput( flipImageFilter->GetOutput() );
+
+    ImageType::PointType outputOrigin;
+    outputOrigin.Fill( 0 );
+    outputOrigin[2] = -1*desiredStart[2]*flipImageFilter->GetOutput()->GetSpacing()[2];
+
+    //ImageType::OffsetType outputOffset;
+    //outputOffset.Fill( 0 );
+
+    changeInformationImageFilter->SetOutputOrigin( outputOrigin);
+    //changeInformationImageFilter->SetOutputOffset( outputOffset);
+    changeInformationImageFilter->ChangeOriginOn();
+    //changeInformationImageFilter->ChangeOffsetOn();
+    //changeInformationImageFilter->ChangeAll();
+    changeInformationImageFilter->Update();
+
+    ImageType::Pointer output = changeInformationImageFilter->GetOutput();
+    output->Update();
+
+    output->DisconnectPipeline();
+    splitTemporalImageSequence.push_back( output );
+    std::cout << "  - Individual image size: " << splitTemporalImageSequence[iNumberOfPhases]->GetLargestPossibleRegion().GetSize() << std::endl;
+    ImageWriterType::Pointer imageWriter;
+    imageWriter = ImageWriterType::New();
+
+    std::string outputPhaseImageFilename = "/data_l63/tsothman/ICNS_core/build/TestOutput/TEMP_" + SSTR( iNumberOfPhases ) +".mhd";
+
+    imageWriter->SetInput( splitTemporalImageSequence[iNumberOfPhases] );
+    imageWriter->SetFileName( outputPhaseImageFilename );
+    imageWriter->Update();
+
+    }
+
+    //std::cout << fileNames.size() << std::endl;
+
+    // Read dicom header and sort dicoms by timepoints (TP100 to TM100)
+
+    std::cout << "Checking if 4DCT-Data sorting is correct..." << std::endl;
+    unsigned int nNumberOfDicoms = filenames.size() / 11;
+    for( unsigned int iNumberOfDicoms = 0; iNumberOfDicoms < nNumberOfDicoms; iNumberOfDicoms++)
+    {
+      std::vector<std::string> singleFNVector;
+      singleFNVector.push_back( filenames[iNumberOfDicoms] );
+
+      ImageIOType::Pointer imageIO = ImageIOType::New();
+      ImageSeriesReader::Pointer seriesReader = ImageSeriesReader::New();
+      seriesReader->SetImageIO( imageIO );
+      seriesReader->SetFileNames( singleFNVector );
+      try
+      {
+        // Software Guide : BeginCodeSnippet
+        seriesReader->Update();
+        // Software Guide : EndCodeSnippet
+      }
+      catch (itk::ExceptionObject &ex)
+      {
+        std::cout << "HERE WE ARE: " << filenames[iNumberOfDicoms] << std::endl;
+          std::cout << ex << std::endl;
+      }
+      typedef itk::MetaDataDictionary DictionaryType;
+      const DictionaryType & dictionary = imageIO->GetMetaDataDictionary();
+
+      typedef itk::MetaDataObject< std::string > MetaDataStringType;
+
+      std::string entryId = "0018|0022";
+      DictionaryType::ConstIterator tagItr = dictionary.Find( entryId );
+
+      MetaDataStringType::ConstPointer entryvalue =
+      dynamic_cast<const MetaDataStringType *>( tagItr->second.GetPointer() );
+      if( entryvalue )
+      {
+        std::string tagvalue = entryvalue->GetMetaDataObjectValue();
+        //std::cout << "Scan Option (" << entryId << ") ";
+        //std::cout << " is: " << tagvalue << std::endl;
+        std::string str1 ("TM100");
+        if ( std::strcmp(tagvalue.c_str(), str1.c_str()))
+        {
+          std::cout << "Correct time point matching: Phase 0 = Timepoint -100" << std::endl;
+        }
+        else
+        {
+          std::cerr << "ERROR - incorrect time point matching!" << std::endl;
+          splitTemporalImageSequence.clear();
+        }
+      }
+    }
+    temporalImageSequence = splitTemporalImageSequence;
+  }
+
   return temporalImageSequence;
 }

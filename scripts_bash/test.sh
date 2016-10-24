@@ -40,9 +40,9 @@ echo '----------------------------'
 
 for dir in "$TEST_4DCT"/*
 	do
-	if [[ "$dir" =~ 'HERZPHASE' ]]; then
+	if [[ "$dir" =~ '_-0%' ]]; then
 	echo 'move CT DATA'
-	#find ${TEST_4DCT} -type f -exec mv --backup=numbered -t ${TEST_4DCT} {} +
+	find ${TEST_4DCT} -type f -exec mv --backup=numbered -t ${TEST_4DCT} {} +
 	echo ${TEST_DATA_MASTER_DIR}
 	fi
 done
