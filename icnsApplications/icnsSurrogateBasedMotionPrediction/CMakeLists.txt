@@ -30,6 +30,11 @@ SET( icnsGenericMLRTraining_SRCS
   icnsMLRMotionPrediction.cpp
 )
 
+SET( icnsGenericMLRPrediction_SRCS
+  icnsMLRMotionPrediction.h
+  icnsMLRMotionPrediction.cpp
+)
+
 SET( icnsGenericMLR_SRCS
   icnsMLRMotionPrediction.cpp
   icnsMotionPredictionSFS.cpp
@@ -114,7 +119,7 @@ ADD_EXECUTABLE(icnsGenerateMatrixFromVectorField icnsGenerateMatrixFromVectorFie
 ADD_EXECUTABLE(icnsGenerateVectorFieldFromVector icnsGenerateVectorFieldFromVectorMain.cxx )
 
 ADD_EXECUTABLE(icnsGenericMLRTraining icnsGenericMLRTrainingMain.cxx ${icnsGenericMLRTraining_SRCS})
-ADD_EXECUTABLE(icnsGenericMLRPrediction icnsGenericMLRPredictionMain.cxx ${icnsGenericMLR_SRCS})
+ADD_EXECUTABLE(icnsGenericMLRPrediction icnsGenericMLRPredictionMain.cxx ${icnsGenericMLRPrediction_SRCS})
 ADD_EXECUTABLE(icnsGenericMLRTrainingAndPrediction icnsGenericMLRTrainingAndPredictionMain.cxx ${icnsGenericMLR_SRCS})
 
 #ADD_EXECUTABLE(imiGenericPCRTrainingAndPrediction imiGenericPCRTrainingAndPredictionMain.cxx ${imiGenericPCR_SRCS} ${imiLOOCV_SRCS})

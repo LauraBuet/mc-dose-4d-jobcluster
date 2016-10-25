@@ -197,15 +197,15 @@ int main( int argc, char *argv[] )
 
   icnsMLRMotionPrediction* predictionFilter = icnsMLRMotionPrediction::New();
 
-  /* ***************************************************************
-   *    REGRESSOR PART:
-   *****************************************************************
-   * Current implementation: Centering inside prediction filter. Thus:
-   * First step: Generating regressor matrix for training purposes:
-   *
-   * If -S is set and a series of filenames is given, they are stacked
-   * together into a single regressor matrix.
-   *****************************************************************/
+  // -------------------------------------------------------------
+  // REGRESSOR PART:
+  // -------------------------------------------------------------
+  // Current implementation: Centering inside prediction filter. Thus:
+  // First step: Generating regressor matrix for training purposes:
+  //
+  // If -S is set and a series of filenames is given, they are stacked
+  // together into a single regressor matrix.
+  // -------------------------------------------------------------
 
   VnlMatrixType regressorTrainingMatrix;
   std::string fileTypePattern;
@@ -235,7 +235,7 @@ int main( int argc, char *argv[] )
         std::cout << "  Reading observation " << regressorObservationsFilenames[obsCounter] << " ..." << std::endl;
         vcl_ifstream fid;
         fid.open( regressorObservationsFilenames[obsCounter].c_str() );
-        vnl_matlab_readhdr matlabHeader( fid);
+        vnl_matlab_readhdr matlabHeader( fid );
         
         // Depending on type, use the appropriate reading function:
         if( matlabHeader.is_single() )
@@ -262,12 +262,12 @@ int main( int argc, char *argv[] )
     }
   }
 
-  /* ***************************************************************
-   *    REGRESSAND PART:
-   *****************************************************************
-   * STANDARD USE CASE: Regressand observations are given as .mat
-   * files.
-   * ***************************************************************/
+  // -------------------------------------------------------------
+  // REGRESSAND PART:
+  // -------------------------------------------------------------
+  // STANDARD USE CASE: Regressand observations are given as .mat
+  // files.
+  // -------------------------------------------------------------
 
   std::cout << "Generating regressand training matrix ... " << std::endl;
   VnlMatrixType regressandTrainingMatrix;
@@ -329,12 +329,11 @@ int main( int argc, char *argv[] )
     }
   }
 
-  /* ***************************************************************
-   *    MLR TRAINING PART:
-   ****************************************************************/
+  // -------------------------------------------------------------
+  // MLR TRAINING PART:
+  // -------------------------------------------------------------
 
-  std::cout << std::endl;
-  std::cout << "Training OLS system matrix ... " << std::endl;
+  std::cout << "  Training OLS system matrix ... " << std::endl;
 
   predictionFilter->SetRegressorTrainingMatrix( regressorTrainingMatrix );
   predictionFilter->SetRegressandTrainingMatrix( regressandTrainingMatrix );
@@ -342,10 +341,10 @@ int main( int argc, char *argv[] )
   predictionFilter->SetMulticollinearityCheck( true );
   predictionFilter->TrainLSEstimator();
 
-  /* ***************************************************************
-   * If B is set, then write the system matrix to file.
-   * Assumption: Matlab format.
-   ****************************************************************/
+  // -------------------------------------------------------------
+  // If B is set, then write the system matrix to file.
+  // Assumption: Matlab format.
+  // -------------------------------------------------------------
 
   if( !outSystemMatrixFilename.empty() )
   {
@@ -359,10 +358,10 @@ int main( int argc, char *argv[] )
     outSystemMatrixFile.write( lsEstimator, "SystemMatrix" );
   }
 
-  /* ***************************************************************
-   * If Z_mean is set, then write Z_mean to file.
-   * Assumption: Matlab format.
-   ****************************************************************/
+  // -------------------------------------------------------------
+  // If Z_mean is set, then write Z_mean to file.
+  // Assumption: Matlab format.
+  // -------------------------------------------------------------
 
   if( !meanRegressorFilename.empty() )
   {
@@ -375,10 +374,10 @@ int main( int argc, char *argv[] )
     outMeanRegressorFile.write( meanRegressor, "MeanRegressor" );
   }
 
-  /* ***************************************************************
-   * If V_mean is set, then write V_mean to file.
-   * Assumption: Matlab format.
-   ****************************************************************/
+  // -------------------------------------------------------------
+  // If V_mean is set, then write V_mean to file.
+  // Assumption: Matlab format.
+  // -------------------------------------------------------------
 
   if( !meanRegressandFilename.empty() )
   {
@@ -399,5 +398,5 @@ int main( int argc, char *argv[] )
   std::cout << std::endl;
 
   return EXIT_SUCCESS;
+  
 } // end of main
-

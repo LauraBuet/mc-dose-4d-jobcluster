@@ -1,8 +1,12 @@
 /** \file imiGenericMLRPredictionMain.cxx
  *
- *  \b Initial \b Author: Matthias Wilms \n\n
+ *  Original authors:
+ *
+ *  \b Initial \b Authors: Matthias Wilms, Rene Werner \n\n
  *  \b Copyright (C) 2012 Institute of Medical Informatics,
  *     University of Luebeck
+ *
+ *  Modified by: Rene Werner (ICNS, 2016)
  *
  ****************************************************************************/
 
@@ -11,7 +15,6 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include "float.h"
 extern "C"
 {
 #include "getopt.h"
@@ -32,9 +35,6 @@ extern "C"
 // Project includes:
 #include "icnsMLRMotionPrediction.h"
 #include "icnsSurrogateBasedMotionPredictionTypeDefinitions.h"
-//#include "icnsImageFunctions.h"
-//#include "imiImageWriter.h"
-//#include "imiImageReader.h"
 
 // Global typedefs:
 typedef itk::Image<short, 3>                                                 ImageType;
@@ -45,11 +45,15 @@ typedef itk::WarpImageFilter< ImageType, ImageType, DisplacementFieldType >  War
 
 using namespace imi;
 
+// ---------------------------------------------------------------
+// Print help routine:
+// ---------------------------------------------------------------
+
 void PrintHelp()
 {
   std::cout << "\n";
   std::cout << "Usage:\n";
-  std::cout << "imiGenericMLRPredictionMain ... \n\n";
+  std::cout << "icnsGenericMLRPredictionMain ... \n\n";
 
   std::cout << "-V            Mean regressand observation in standard Matlab format (.mat) | List of regressand observations (.mat|.mha)\n";
   std::cout << "-Z            Mean regressor observation in standard Matlab format (.mat) | List of regressor observations (.mat|.mha)\n";
@@ -60,21 +64,25 @@ void PrintHelp()
   std::cout << "-h            Print this help.\n";
 }
 
+// ---------------------------------------------------------------
+// Main routine:
+// ---------------------------------------------------------------
+
 int main( int argc, char *argv[] )
 {
+  std::cout << std::endl;
   std::cout << "==========================================" << std::endl;
-  std::cout << "====    imiGenericMLRPredictionMain     ====" << std::endl;
-  std::cout << "==========================================" << std::endl;
-  std::cout << "Reading parameters ...\n" << std::endl;
-
+  std::cout << "icnsGenericMLRPrediction                  " << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
+  std::cout << "Reading parameters ..." << std::endl;
+  
   if( argc < 2 )
   {
     PrintHelp();
     return EXIT_SUCCESS;
   }
 
-
-  // VARIABLES AND CALL PARAMS:
+  // Initializing parameters with default values:
 
   std::string meanRegressorFilename;
   std::string meanRegressandFilename;
@@ -184,11 +192,11 @@ int main( int argc, char *argv[] )
 
   icnsMLRMotionPrediction* predictionFilter = icnsMLRMotionPrediction::New();
 
-  /* ******************************************************************
-   * Prediction step
-   * Assuming regressor observation given as .mat.
-   * Prediction will be saved unter specified name.
-   * ******************************************************************/
+  // -------------------------------------------------------------
+  // Prediction step
+  // Assuming regressor observation given as .mat.
+  // Prediction will be saved unter specified name.
+  // -------------------------------------------------------------
 
   vcl_ifstream fid;
 
@@ -246,15 +254,33 @@ int main( int argc, char *argv[] )
   {
     std::cout << "  Reading measurement (Z_hat) ..." << std::endl;
     fid.open( inputMatrixFilename.c_str() );
-    icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileDouble( measurement, inputMatrixFilename);
+    vnl_matlab_readhdr matlabHeader( fid );
+    
+    // Depending on type, use the appropriate reading function:
+    if( matlabHeader.is_single() )
+    {
+      icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileRealType( measurement, inputMatrixFilename );
+    }
+    else
+    {
+      icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileDouble( measurement, inputMatrixFilename );
+    }
     fid.close();
   }
 
-  predictionFilter->SetMeanRegressor(meanRegressor);
-  predictionFilter->SetMeanRegressand(meanRegressand);
-  predictionFilter->SetTrainedEstimator(systemMatrix);
-  predictionFilter->PredictOutput(measurement,prediction);
-
+  // -------------------------------------------------------------
+  // Actual prediction:
+  // -------------------------------------------------------------
+  
+  predictionFilter->SetMeanRegressor( meanRegressor );
+  predictionFilter->SetMeanRegressand( meanRegressand );
+  predictionFilter->SetTrainedEstimator( systemMatrix );
+  predictionFilter->PredictOutput( measurement, prediction );
+  
+  // -------------------------------------------------------------
+  // Writing results:
+  // -------------------------------------------------------------
+  
   if( !predictionMatrixFilename.empty() && inputImageFilename.empty() )
   {
     std::cout << "Saving prediction output ... " << std::endl;
@@ -341,13 +367,12 @@ int main( int argc, char *argv[] )
 
   }
 
-  /* *****************************************************************/
+  // -------------------------------------------------------------
 
-  //predictionFilter->Delete(); //TODO
-
-  std::cout << "\n------------------------------------------" << std::endl;
-  std::cout << "imiGenericMLRPrediction finished." << std::endl;
-  std::cout << "==========================================\n" << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
+  std::cout << "imiGenericMLRPrediction finished."          << std::endl;
+  std::cout << "==========================================" << std::endl;
 
   return EXIT_SUCCESS;
+  
 } // end of main
