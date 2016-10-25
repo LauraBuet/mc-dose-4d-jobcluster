@@ -102,11 +102,11 @@ int main( int argc, char *argv[] )
   VnlMatrixType inputMatrix;
   DisplacementFieldType::Pointer outputField;
 
-  imiSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileRealType(inputMatrix,inputFilename);
+  icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileRealType(inputMatrix,inputFilename);
 
   // std::cout<<"inputMatrix ("<<inputMatrix.rows()<<","<<inputMatrix.cols()<<"): "<<inputMatrix<<std::endl;
 
-  imiSurrogateBasedMotionPredictionHelpers::GenerateVectorFieldFromVnlVector(inputMatrix,outputField,refFieldFilename,maskFilename);
+  icnsSurrogateBasedMotionPredictionHelpers::GenerateVectorFieldFromVnlVector(inputMatrix,outputField,refFieldFilename,maskFilename);
 
   typedef itk::ImageFileWriter< DisplacementFieldType > FieldWriterType;
   FieldWriterType::Pointer displacementFieldWriter = FieldWriterType::New();

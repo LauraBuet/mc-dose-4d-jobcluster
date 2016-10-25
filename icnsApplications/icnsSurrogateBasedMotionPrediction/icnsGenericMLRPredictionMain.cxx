@@ -246,7 +246,7 @@ int main( int argc, char *argv[] )
   {
     std::cout << "  Reading measurement (Z_hat) ..." << std::endl;
     fid.open( inputMatrixFilename.c_str() );
-    imiSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileDouble( measurement, inputMatrixFilename);
+    icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileDouble( measurement, inputMatrixFilename);
     fid.close();
   }
 
@@ -258,13 +258,13 @@ int main( int argc, char *argv[] )
   if( !predictionMatrixFilename.empty() && inputImageFilename.empty() )
   {
     std::cout << "Saving prediction output ... " << std::endl;
-    imiSurrogateBasedMotionPredictionHelpers::SaveVnlVectorAsVectorField( prediction, predictionMatrixFilename, templateFilename, maskFilename );
+    icnsSurrogateBasedMotionPredictionHelpers::SaveVnlVectorAsVectorField( prediction, predictionMatrixFilename, templateFilename, maskFilename );
 
   }
   else if (!inputImageFilename.empty())
   {
     DisplacementFieldPointerType outputField;
-    imiSurrogateBasedMotionPredictionHelpers::GenerateVectorFieldFromVnlVector( prediction, outputField, templateFilename, maskFilename );
+    icnsSurrogateBasedMotionPredictionHelpers::GenerateVectorFieldFromVnlVector( prediction, outputField, templateFilename, maskFilename );
 
     std::cout << "Allocate displacement field ... " << std::endl;
 

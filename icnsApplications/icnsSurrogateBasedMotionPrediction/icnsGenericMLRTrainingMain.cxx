@@ -1,8 +1,8 @@
 /** \file icnsGenericMLRTrainingMain.cxx
  *
- *  Original author:
+ *  Original authors:
  *
- *  \b Initial \b Author: Matthias Wilms \n\n
+ *  \b Initial \b Authors: Matthias Wilms, Rene Werner \n\n
  *  \b Copyright (C) 2012 Institute of Medical Informatics,
  *     University of Luebeck
  *
@@ -15,7 +15,6 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-//#include "float.h"
 extern "C"
 {
 #include "getopt.h"
@@ -34,57 +33,63 @@ extern "C"
 #include "icnsMLRMotionPrediction.h"
 #include "icnsSurrogateBasedMotionPredictionTypeDefinitions.h"
 
-//Typedefs
+// Global typedefs:
+typedef float                       MatrixValueType;
+typedef vnl_vector<MatrixValueType> VnlVectorType;
+typedef vnl_matrix<MatrixValueType> VnlMatrixType;
 
 using namespace imi;
+
+// ---------------------------------------------------------------
+// Print help routine:
+// ---------------------------------------------------------------
 
 void PrintHelp()
 {
   std::cout << "\n";
   std::cout << "Usage:\n";
-  std::cout << "imiGenericMLRTrainingMain ... \n\n";
+  std::cout << "icnsGenericMLRTrainingMain ... \n";
 
-  std::cout << "-V            Regressand observations in standard Matlab format (.mat)\n";
+  std::cout << "-V            Regressand observations in standard Matlab format (.mat as float and -v4 ? | mha)\n";
   std::cout << "-V_mean       Mean regressand observation output (.mat)\n";
-  std::cout << "-Z            Regressor observations in standard Matlab format (.mat)\n";
+  std::cout << "-Z            Regressor observations in standard Matlab format (.mat as double and -v4 )\n";
   std::cout << "-Z_mean       Mean regressor observation output (.mat)\n";
   std::cout << "-B            Filename of system matrix for saving (.mat).\n";
   std::cout << "-h            Print this help.\n";
 }
 
+// ---------------------------------------------------------------
+// Main routine:
+// ---------------------------------------------------------------
+
 int main( int argc, char *argv[] )
 {
+  std::cout << std::endl;
   std::cout << "==========================================" << std::endl;
-  std::cout << "====    imiGenericMLRTrainingMain     ====" << std::endl;
-  std::cout << "==========================================" << std::endl;
-  std::cout << "Reading parameters ...\n" << std::endl;
-
+  std::cout << "icnsGenericMLRTraining                    " << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
+  std::cout << "Reading parameters ..." << std::endl;
+  
   if( argc < 2 )
   {
     PrintHelp();
-    return 1;
+    return EXIT_FAILURE;
   }
 
-  // TYPEDEFS:
-
-  typedef float MatrixValueType;
-  //typedef vnl_vector<MatrixValueType> VnlVectorType;
-  typedef vnl_matrix<MatrixValueType> VnlMatrixType;
-
-  // VARIABLES AND CALL PARAMS:
-
+  // Initializing parameters with default values:
+  
   std::vector<std::string> regressorObservationsFilenames;
   bool regressorObservations_flag         = false;
   unsigned int noOfRegressorObservations  = 0;
-  std::string meanRegressorFilename;
-
-  std::string maskFilename;
-
+  
   std::vector<std::string> regressandObservationsFilenames;
   bool regressandObservations_flag        = false;
-  unsigned int noOfRegressandObservations = 0;
+  unsigned int nRegressandObservations = 0;
+  
+  std::string meanRegressorFilename;
   std::string meanRegressandFilename;
-
+  std::string maskFilename;
+  
   std::string outSystemMatrixFilename;
 
   bool majorFlagChange = false;
@@ -172,8 +177,8 @@ int main( int argc, char *argv[] )
     if( regressandObservations_flag )
     {
       regressandObservationsFilenames.push_back( argv[i] );
-      noOfRegressandObservations++;
-      std::cout << "  Regressand observation " << noOfRegressandObservations << ": " << regressandObservationsFilenames[noOfRegressandObservations - 1] << std::endl;
+      nRegressandObservations++;
+      std::cout << "  Regressand observation " << nRegressandObservations << ": " << regressandObservationsFilenames[nRegressandObservations - 1] << std::endl;
       continue;
     }
 
@@ -181,7 +186,10 @@ int main( int argc, char *argv[] )
     std::cout << "Unknown param at " << i << ": " << argv[i] << std::endl;
   }
 
-  if( noOfRegressandObservations != noOfRegressorObservations )
+  // -------------------------------------------------------------
+  // Plausibility checks:
+  
+  if( nRegressandObservations != noOfRegressorObservations )
   {
     std::cerr << "Numbers of regressand and regressor observations are not the same!" << std::endl;
     return EXIT_FAILURE;
@@ -209,7 +217,7 @@ int main( int argc, char *argv[] )
   }
   else
   {
-    fileTypePattern = imiSurrogateBasedMotionPredictionHelpers::GetFileEnding( regressorObservationsFilenames[0] );
+    fileTypePattern = icnsSurrogateBasedMotionPredictionHelpers::GetFileEnding( regressorObservationsFilenames[0] );
 
     if( (noOfRegressorObservations == 1) && (strcmp( fileTypePattern.c_str(), "mat" ) == 0) )
     {
@@ -227,8 +235,18 @@ int main( int argc, char *argv[] )
         std::cout << "  Reading observation " << regressorObservationsFilenames[obsCounter] << " ..." << std::endl;
         vcl_ifstream fid;
         fid.open( regressorObservationsFilenames[obsCounter].c_str() );
-        //vnl_matlab_read_or_die( fid, currentRegressorObservationMatrix );
-        imiSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileDouble(currentRegressorObservationMatrix,regressorObservationsFilenames[obsCounter]);
+        vnl_matlab_readhdr matlabHeader( fid);
+        
+        // Depending on type, use the appropriate reading function:
+        if( matlabHeader.is_single() )
+        {
+          icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileRealType(currentRegressorObservationMatrix,regressorObservationsFilenames[obsCounter]);
+        }
+        else
+        {
+          icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileDouble(currentRegressorObservationMatrix,regressorObservationsFilenames[obsCounter]);
+        }
+        
         if( obsCounter == 0 )
         {
           regressorTrainingMatrix.set_size( currentRegressorObservationMatrix.rows(), regressorObservationsFilenames.size() );
@@ -254,37 +272,48 @@ int main( int argc, char *argv[] )
   std::cout << "Generating regressand training matrix ... " << std::endl;
   VnlMatrixType regressandTrainingMatrix;
 
-  if( noOfRegressandObservations == 0 )
+  if( nRegressandObservations == 0 )
   {
     std::cout << " No regressand observations specified. Aborting computation." << std::endl;
     return EXIT_FAILURE;
   }
   else
   {
-    fileTypePattern = imiSurrogateBasedMotionPredictionHelpers::GetFileEnding( regressandObservationsFilenames[0] );
+    fileTypePattern = icnsSurrogateBasedMotionPredictionHelpers::GetFileEnding( regressandObservationsFilenames[0] );
     if( strcmp( fileTypePattern.c_str(), "mha" ) == 0 )
-        {
-          std::cout << "Generating regressand training matrix from individual motion fields ... " << std::endl;
-          imiSurrogateBasedMotionPredictionHelpers::GenerateMatrixFromVectorFields( regressandTrainingMatrix, regressandObservationsFilenames, maskFilename );
-
-        }
-    else if( (noOfRegressandObservations == 1) && (strcmp( fileTypePattern.c_str(), "mat" ) == 0) )
+    {
+      std::cout << "Generating float regressand training matrix from individual motion fields ... " << std::endl;
+      icnsSurrogateBasedMotionPredictionHelpers::GenerateMatrixFromVectorFields( regressandTrainingMatrix, regressandObservationsFilenames, maskFilename );
+    }
+    
+    else if( (nRegressandObservations == 1) && (strcmp( fileTypePattern.c_str(), "mat" ) == 0) )
     {
       std::cout << "Reading regressand training matrix not yet supported. Aborting computation." << std::endl;
       return EXIT_FAILURE;
-      //ReadMatrixFromMatlabFile( regressorTrainingMatrix, regressorObservationsFilenames[0] );
     }
+    
     else if( strcmp( fileTypePattern.c_str(), "mat" ) == 0 )
     {
-      std::cout << "Generating regressand training matrix from individual samples ... " << std::endl;
+      std::cout << "Generating regressand training matrix from individual mat samples ... " << std::endl;
 
       VnlMatrixType currentRegressandObservationMatrix;
-      for( unsigned int obsCounter = 0; obsCounter < noOfRegressandObservations; obsCounter++ )
+      for( unsigned int obsCounter = 0; obsCounter < nRegressandObservations; obsCounter++ )
       {
-        std::cout << "  Reading observation " << regressandObservationsFilenames[obsCounter] << " ..." << std::endl;
+        std::cout << "  Reading observation " << regressandObservationsFilenames[obsCounter] << " ... " << std::endl;
         vcl_ifstream fid;
         fid.open( regressandObservationsFilenames[obsCounter].c_str() );
-        imiSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileDouble( currentRegressandObservationMatrix, regressandObservationsFilenames[obsCounter]);
+        vnl_matlab_readhdr matlabHeader( fid );
+        
+        // Depending on type, use the appropriate reading function:
+        if( matlabHeader.is_single() )
+        {
+          icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileRealType( currentRegressandObservationMatrix, regressandObservationsFilenames[obsCounter]);
+        }
+        else
+        {
+          icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileDouble( currentRegressandObservationMatrix, regressandObservationsFilenames[obsCounter]);
+        }
+        
         if( obsCounter == 0 )
         {
           regressandTrainingMatrix.set_size( currentRegressandObservationMatrix.rows(), regressandObservationsFilenames.size() );
@@ -309,7 +338,8 @@ int main( int argc, char *argv[] )
 
   predictionFilter->SetRegressorTrainingMatrix( regressorTrainingMatrix );
   predictionFilter->SetRegressandTrainingMatrix( regressandTrainingMatrix );
-  predictionFilter->SetMulticollinearityCheck( false );
+  //predictionFilter->SetMulticollinearityCheck( false );
+  predictionFilter->SetMulticollinearityCheck( true );
   predictionFilter->TrainLSEstimator();
 
   /* ***************************************************************
@@ -364,8 +394,8 @@ int main( int argc, char *argv[] )
   //predictionFilter->Delete(); // TODO
 
   std::cout << "------------------------------------------" << std::endl;
-  std::cout << "imiGenericMLRTraining finished."              << std::endl;
-  std::cout << "=========================================="   << std::endl;
+  std::cout << "icnsGenericMLRTraining finished."           << std::endl;
+  std::cout << "==========================================" << std::endl;
   std::cout << std::endl;
 
   return EXIT_SUCCESS;

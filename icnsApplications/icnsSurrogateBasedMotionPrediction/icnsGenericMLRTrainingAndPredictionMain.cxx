@@ -196,7 +196,7 @@ int main( int argc, char *argv[] )
     VnlMatrixType* regressorTrainingMatrix = new VnlMatrixType();
     std::string fileTypePattern;
 
-    fileTypePattern = imiSurrogateBasedMotionPredictionHelpers::GetFileEnding( regressorObservationsFilenames[surrogate][0] );
+    fileTypePattern = icnsSurrogateBasedMotionPredictionHelpers::GetFileEnding( regressorObservationsFilenames[surrogate][0] );
 
     if( strcmp( fileTypePattern.c_str(), "mat" ) == 0 )
     {
@@ -258,12 +258,12 @@ int main( int argc, char *argv[] )
   else
   {
     std::string fileTypePattern;
-    fileTypePattern = imiSurrogateBasedMotionPredictionHelpers::GetFileEnding( regressandObservationsFilenames[0] );
+    fileTypePattern = icnsSurrogateBasedMotionPredictionHelpers::GetFileEnding( regressandObservationsFilenames[0] );
 
     if( strcmp( fileTypePattern.c_str(), "mha" ) == 0 )
     {
       std::cout << "Generating regressand training matrix from individual motion fields ... " << std::endl;
-      imiSurrogateBasedMotionPredictionHelpers::GenerateMatrixFromVectorFields( regressandTrainingMatrix, regressandObservationsFilenames, maskFilename );
+      icnsSurrogateBasedMotionPredictionHelpers::GenerateMatrixFromVectorFields( regressandTrainingMatrix, regressandObservationsFilenames, maskFilename );
 
     }
     else if( strcmp( fileTypePattern.c_str(), "mat" ) == 0 )
@@ -427,7 +427,7 @@ int main( int argc, char *argv[] )
 
     std::cout << "Saving prediction output " << i+1 << " ... " << std::endl;
 
-    fileTypePattern = imiSurrogateBasedMotionPredictionHelpers::GetFileEnding( predictionFilenames[i] );
+    fileTypePattern = icnsSurrogateBasedMotionPredictionHelpers::GetFileEnding( predictionFilenames[i] );
 
     if( strcmp( fileTypePattern.c_str(), "mat" ) == 0 )
     {
@@ -436,7 +436,7 @@ int main( int argc, char *argv[] )
     }
     else if( strcmp( fileTypePattern.c_str(), "mha" ) == 0 )
     {
-      imiSurrogateBasedMotionPredictionHelpers::SaveVnlVectorAsVectorField( prediction, predictionFilenames[i], regressandObservationsFilenames[0], maskFilename );
+      icnsSurrogateBasedMotionPredictionHelpers::SaveVnlVectorAsVectorField( prediction, predictionFilenames[i], regressandObservationsFilenames[0], maskFilename );
     }
     else
     {

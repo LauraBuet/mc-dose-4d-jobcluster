@@ -54,12 +54,10 @@ template<class TValueType> bool MatrixCompare( string inputMatrix1Filename, stri
   // load matrices
   //
 
-
   string fileTypePattern1, fileTypePattern2;
 
-
-  fileTypePattern1 = imiSurrogateBasedMotionPredictionHelpers::GetFileEnding( inputMatrix1Filename );
-  fileTypePattern2 = imiSurrogateBasedMotionPredictionHelpers::GetFileEnding( inputMatrix2Filename );
+  fileTypePattern1 = icnsSurrogateBasedMotionPredictionHelpers::GetFileEnding( inputMatrix1Filename );
+  fileTypePattern2 = icnsSurrogateBasedMotionPredictionHelpers::GetFileEnding( inputMatrix2Filename );
 
   if( strcmp( fileTypePattern1.c_str(), "mat" ) == 0 )
   {

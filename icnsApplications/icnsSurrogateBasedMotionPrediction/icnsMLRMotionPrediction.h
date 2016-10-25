@@ -167,18 +167,8 @@ public:
 
   bool GetTrainedEstimator( VnlMatrixType& estimator )
   {
-    if(m_trainedEstimator.empty())
-    {
-      if (m_centeredRegressorMatrix.rows() <= m_centeredRegressorMatrix.cols())
-      {
-        m_trainedEstimator = m_centeredObservationMatrix * (m_centeredRegressorMatrix.transpose() * m_invSquareMatrixPInv);
-      } else {
-        m_trainedEstimator = (m_centeredObservationMatrix * m_invSquareMatrixPInv) * m_centeredRegressorMatrix.transpose();
-      }
-    }
-
-    estimator=m_trainedEstimator;
-
+    if( m_meanRegressorVector.empty() ) return false;
+    estimator = m_trainedEstimator;
     return true;
   }
 

@@ -105,8 +105,10 @@ int main( int argc, char *argv[] )
   // Loading input data:
   
   VnlMatrixType outputMatrix;
-  imiSurrogateBasedMotionPredictionHelpers::GenerateMatrixFromVectorFields(outputMatrix,inputFilenames,maskFilename);
+  icnsSurrogateBasedMotionPredictionHelpers::GenerateMatrixFromVectorFields( outputMatrix, inputFilenames, maskFilename );
 
+  std::cout << outputMatrix.cols() << " " << outputMatrix.rows() << std::endl;
+  
   vnl_matlab_filewrite outFileWriter( outputFilename.c_str() );
   outFileWriter.write( outputMatrix, "fields" );
 
