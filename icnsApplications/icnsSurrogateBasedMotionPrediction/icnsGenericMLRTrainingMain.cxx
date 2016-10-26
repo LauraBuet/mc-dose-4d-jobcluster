@@ -48,18 +48,24 @@ void PrintHelp()
 {
   std::cout << "\n";
   std::cout << "Usage:\n";
-  std::cout << "icnsGenericMLRTrainingMain ... \n";
+  std::cout << "icnsGenericMLRTraining ... \n";
 
-  std::cout << "-V            Regressand observations in standard Matlab format (.mat as float and -v4 ? | mha)\n";
-  std::cout << "-V_mean       Mean regressand observation output (.mat)\n";
-  std::cout << "-Z            Regressor observations in standard Matlab format (.mat as double and -v4 )\n";
-  std::cout << "-Z_mean       Mean regressor observation output (.mat)\n";
-  std::cout << "-B            Filename of system matrix for saving (.mat).\n";
+  std::cout << "-V            IN:  Regressand observations in standard Matlab format\n";
+  std::cout << "              (.mat in -v4 format or as .mha)\n";
+  std::cout << "-Z            IN:  Regressor observations in standard Matlab format (.mat in -v4)\n";
+  std::cout << "-V_mean       OUT: Mean regressand observation output (.mat)\n";
+  std::cout << "-Z_mean       OUT: Mean regressor observation output (.mat)\n";
+  std::cout << "-B            OUT: Filename of system matrix for saving (.mat).\n";
+  
   std::cout << "-h            Print this help.\n";
 }
 
 // ---------------------------------------------------------------
 // Main routine:
+// ---------------------------------------------------------------
+// Notes: If the regressand data is given as .mat and float /
+// single, VNL can deal with it. However, corresponding data
+// cannot be loaded into Matlab itself.
 // ---------------------------------------------------------------
 
 int main( int argc, char *argv[] )
@@ -141,7 +147,7 @@ int main( int argc, char *argv[] )
     {
       i++;
       meanRegressandFilename = argv[i];
-      std::cout << "Mean regressand (V_mean) filename:        " << meanRegressandFilename << std::endl;
+      std::cout << "Mean regressand (V_mean) filename:       " << meanRegressandFilename << std::endl;
       majorFlagChange = true;
       continue;
     }

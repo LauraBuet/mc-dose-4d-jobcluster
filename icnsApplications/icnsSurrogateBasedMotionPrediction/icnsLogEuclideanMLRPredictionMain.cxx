@@ -61,7 +61,6 @@ void PrintHelp()
   std::cout << "-Z_hat        IN: Input measurement (.mat in -v4 format).\n";
   std::cout << "-M            IN (optional): Mask file to restrict the computations.\n";
   std::cout << "              only usable with -v_hat and *.mha.";
-  std::cout << "-T            IN: Template field to allow for output conversion from matlab to mha.\n";
   
   std::cout << "-V_hat        OUT: Prediction output in matlab format (.mat).\n";
   std::cout << "-v_hat        OUT: Prediction output field (.mha).\n";
@@ -91,15 +90,13 @@ int main( int argc, char *argv[] )
 
   std::string meanRegressorFilename;
   std::string meanRegressandFilename;
-  std::string systemMatrixFilename;
+  std::string inSystemMatrixFilename;
   std::string inputMatrixFilename;
-  
-  std::string maskFilename;
-  std::string templateFieldFilename;
-  
   std::string predictionMatrixFilename;
-  std::string predictionFieldFilename;
-  
+  std::string maskFilename;
+  std::string templateFilename;
+  std::string inputImageFilename;
+
   bool inverseField=false;
 
   // Running through cmd line params:
@@ -114,11 +111,11 @@ int main( int argc, char *argv[] )
     }
 
     // Regressor related params:
-    if( strcmp( argv[i], "-Z_mean" ) == 0 )
+    if( strcmp( argv[i], "-Z" ) == 0 )
     {
       i++;
       meanRegressorFilename = argv[i];
-      std::cout << "Mean regressor (Z_mean) filename:    " << meanRegressorFilename << std::endl;
+      std::cout << "Mean regressor (Z_mean) filename:        " << meanRegressorFilename << std::endl;
       continue;
     }
 
@@ -127,7 +124,7 @@ int main( int argc, char *argv[] )
     {
       i++;
       meanRegressandFilename = argv[i];
-      std::cout << "Mean regressand (V_mean) filename:   " << meanRegressandFilename << std::endl;
+      std::cout << "Mean regressand (V_mean) filename:        " << meanRegressandFilename << std::endl;
       continue;
     }
 
@@ -135,53 +132,61 @@ int main( int argc, char *argv[] )
     if( strcmp( argv[i], "-B" ) == 0 )
     {
       i++;
-      systemMatrixFilename = argv[i];
-      std::cout << "System matrix (B) filename:          " << systemMatrixFilename << std::endl;
+      inSystemMatrixFilename = argv[i];
+      std::cout << "System matrix (B) filename: " << inSystemMatrixFilename << std::endl;
       continue;
     }
 
     // Input matrix related params:
-    if( strcmp( argv[i], "-Z_hat" ) == 0 )
+    if( strcmp( argv[i], "-I" ) == 0 )
     {
       i++;
       inputMatrixFilename = argv[i];
-      std::cout << "Input measurement (Z_hat) filename:  " << inputMatrixFilename << std::endl;
+      std::cout << "Input measurement (Z_hat) filename: " << inputMatrixFilename << std::endl;
       continue;
     }
 
     // Prediction matrix related params:
-    if( strcmp( argv[i], "-V_hat" ) == 0 )
+    if( strcmp( argv[i], "-O" ) == 0 )
     {
       i++;
       predictionMatrixFilename = argv[i];
-      std::cout << "Prediction (V_hat) filename:         " << predictionMatrixFilename << std::endl;
-      continue;
-    }
-    
-    // Prediction matrix related params:
-    if( strcmp( argv[i], "-v_hat" ) == 0 )
-    {
-      i++;
-      predictionFieldFilename = argv[i];
-      std::cout << "Prediction (v_hat) filename:         " << predictionFieldFilename << std::endl;
+      std::cout << "Prediction (V_hat) filename: " << predictionMatrixFilename << std::endl;
       continue;
     }
 
-    // Mask for writing appropriate field data:
+    //Mask
     if( strcmp( argv[i], "-M" ) == 0 )
     {
       i++;
       maskFilename = argv[i];
-      std::cout << "Mask filename:                       " << maskFilename << std::endl;
+      std::cout << "Mask filename:        " << maskFilename << std::endl;
       continue;
     }
 
-    // Template field for conversion to field.
+    //Template
     if( strcmp( argv[i], "-T" ) == 0 )
     {
       i++;
-      templateFieldFilename = argv[i];
-      std::cout << "Template field filename:             " << templateFieldFilename << std::endl;
+      templateFilename = argv[i];
+      std::cout << "Template filename:        " << templateFilename << std::endl;
+      continue;
+    }
+
+    //Input Image
+    if( strcmp( argv[i], "-W" ) == 0 )
+    {
+      i++;
+      inputImageFilename = argv[i];
+      std::cout << "Input image filename:        " << inputImageFilename << std::endl;
+      continue;
+    }
+
+    //Inverse Field?
+    if( strcmp( argv[i], "-o" ) == 0 )
+    {
+      inverseField=true;
+      std::cout << "Inverse field:        " << "true" << std::endl;
       continue;
     }
 
@@ -189,99 +194,64 @@ int main( int argc, char *argv[] )
     std::cout << "Unknown param at " << i << ": " << argv[i] << std::endl;
   }
 
+  icnsMLRMotionPrediction* predictionFilter = icnsMLRMotionPrediction::New();
+
   // -------------------------------------------------------------
-  // Loading input data:
+  // Prediction step
+  // Assuming regressor observation given as .mat.
+  // Prediction will be saved unter specified name.
   // -------------------------------------------------------------
 
-  icnsMLRMotionPrediction* predictionFilter = icnsMLRMotionPrediction::New();
-  
   vcl_ifstream fid;
 
-  VnlMatrixType meanRegressor;   // Z_mean
-  VnlMatrixType meanRegressand;  // V_mean
-  VnlMatrixType systemMatrix;    // B
-  VnlMatrixType measurement;     // Z_hat
-  VnlMatrixType prediction;      // V_hat
+  VnlMatrixType meanRegressor;
+  VnlMatrixType meanRegressand;
+  VnlMatrixType systemMatrix;
+  VnlMatrixType measurement;
+  VnlMatrixType prediction;
 
-  // Reading mean regressor:
   if( meanRegressorFilename.empty() )
   {
-    std::cerr << "  No mean regressor specified. Aborting computation." << std::endl;
+    std::cerr << " No mean regressor specified. Aborting computation." << std::endl;
     return EXIT_FAILURE;
   }
   else
   {
     std::cout << "  Reading mean regressor (Z_mean) ..." << std::endl;
     fid.open( meanRegressorFilename.c_str() );
-    vnl_matlab_readhdr matlabHeader( fid );
-    
-    // Depending on type, use the appropriate reading function:
-    if( matlabHeader.is_single() )
-    {
-      icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileRealType( meanRegressor, meanRegressorFilename.c_str() );
-    }
-    else
-    {
-      icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileDouble( meanRegressor, meanRegressorFilename.c_str() );
-    }
-    
+    vnl_matlab_read_or_die( fid, meanRegressor );
     fid.close();
   }
-  
-  // Reading mean regressor:
+
   if( meanRegressandFilename.empty() )
   {
-    std::cerr << "  No mean regressand specified. Aborting computation." << std::endl;
+    std::cerr << " No mean regressand specified. Aborting computation." << std::endl;
     return EXIT_FAILURE;
   }
   else
   {
     std::cout << "  Reading mean regressand (V_mean) ..." << std::endl;
     fid.open( meanRegressandFilename.c_str() );
-    vnl_matlab_readhdr matlabHeader( fid );
-    
-    // Depending on type, use the appropriate reading function:
-    if( matlabHeader.is_single() )
-    {
-      icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileRealType( meanRegressand, meanRegressandFilename.c_str() );
-    }
-    else
-    {
-      icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileDouble( meanRegressand, meanRegressandFilename.c_str() );
-    }
-    
+    vnl_matlab_read_or_die( fid, meanRegressand );
     fid.close();
   }
 
-  // Reading system matrix:
-  if( systemMatrixFilename.empty() )
+  if( inSystemMatrixFilename.empty() )
   {
-    std::cerr << "  No system matrix specified. Aborting computation." << std::endl;
+    std::cerr << " No system matrix specified. Aborting computation." << std::endl;
     return EXIT_FAILURE;
   }
   else
   {
     std::cout << "  Reading system matrix (B) ..." << std::endl;
-    fid.open( systemMatrixFilename.c_str() );
-    vnl_matlab_readhdr matlabHeader( fid );
-    
-    // Depending on type, use the appropriate reading function:
-    if( matlabHeader.is_single() )
-    {
-      icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileRealType( systemMatrix, systemMatrixFilename.c_str() );
-    }
-    else
-    {
-      icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileDouble( systemMatrix, systemMatrixFilename.c_str() );
-    }
-    
+    fid.open( inSystemMatrixFilename.c_str() );
+    vnl_matlab_read_or_die( fid, systemMatrix );
     fid.close();
   }
 
-  // Reading input measurement:
-  if( inputMatrixFilename.empty() )
+  if( inSystemMatrixFilename.empty() )
   {
-    std::cerr << "  No measurement specified. Aborting computation." << std::endl;
+    std::cerr << " No measurement specified. Aborting computation." << std::endl;
     return EXIT_FAILURE;
   }
   else
@@ -299,7 +269,6 @@ int main( int argc, char *argv[] )
     {
       icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileDouble( measurement, inputMatrixFilename );
     }
-    
     fid.close();
   }
 
@@ -316,30 +285,96 @@ int main( int argc, char *argv[] )
   // Writing results:
   // -------------------------------------------------------------
   
-  // If V_hat has been set as input param, write prediction as mat-file:
-  if( !predictionMatrixFilename.empty() )
+  if( !predictionMatrixFilename.empty() && inputImageFilename.empty() )
   {
-    std::cout << "  Saving prediction output as mat-file ... " << std::flush;
+    std::cout << "Saving prediction output ... " << std::endl;
+    icnsSurrogateBasedMotionPredictionHelpers::SaveVnlVectorAsVectorField( prediction, predictionMatrixFilename, templateFilename, maskFilename );
+
+  }
+  else if (!inputImageFilename.empty())
+  {
+    DisplacementFieldPointerType outputField;
+    icnsSurrogateBasedMotionPredictionHelpers::GenerateVectorFieldFromVnlVector( prediction, outputField, templateFilename, maskFilename );
+
+    std::cout << "Allocate displacement field ... " << std::endl;
+
+    DisplacementFieldPointerType displacementField;
+
+    displacementField = DisplacementFieldType::New();
+    displacementField->CopyInformation( outputField );
+    displacementField->SetBufferedRegion( outputField->GetBufferedRegion() );
+    displacementField->SetRequestedRegion( outputField->GetRequestedRegion() );
+    displacementField->Allocate();
+
+    typedef itk::ExponentialDisplacementFieldImageFilter<DisplacementFieldType, DisplacementFieldType>  FieldExponentiatorType;
     
-    vnl_matlab_filewrite outPredictionFile( predictionMatrixFilename.c_str() );
-    outPredictionFile.write( prediction, "Prediction" );
+    FieldExponentiatorType::Pointer velocityFieldExponentiator = FieldExponentiatorType::New();
+    velocityFieldExponentiator->SetInput( outputField );
+    velocityFieldExponentiator->AutomaticNumberOfIterationsOff();
+    velocityFieldExponentiator->SetMaximumNumberOfIterations( 4 );
+
+    if( inverseField )
+    {
+      std::cout << "Calculate inverse displacement field ... " << std::flush;
+      velocityFieldExponentiator->ComputeInverseOn();
+      displacementField = velocityFieldExponentiator->GetOutput();
+      displacementField->Update();
+    }
+    else
+    {
+      std::cout << "Calculate displacement field ... " << std::flush;
+      displacementField = velocityFieldExponentiator->GetOutput();
+      displacementField->Update();
+    }
+    std::cout << "OK." << std::endl;
+
+    // If an image to load is specified, load it:
+    
+    std::cout << "Loading input image..." << std::flush;
+    
+    ImageReaderType::Pointer inputImageReader = ImageReaderType::New();
+    inputImageReader->SetFileName( inputImageFilename.c_str() );
+    try
+    {
+      inputImageReader->Update();
+    }
+    catch( itk::ExceptionObject& excp )
+    {
+      std::cerr << "ERROR while loading input image." << std::endl;
+      std::cerr << excp << std::endl;
+      return EXIT_FAILURE;
+    }
+    ImageType::Pointer inputImage = inputImageReader->GetOutput();
+    inputImage->Update();
     
     std::cout << "OK." << std::endl;
+
+    std::cout << "Warping image ... " << std::endl;
+    ImageType::Pointer warpedImage;
+    
+    WarpImageFilterType::Pointer warpImageFilter = WarpImageFilterType::New();
+    InterpolatorType::Pointer interpolator = InterpolatorType::New();
+    warpImageFilter->SetInterpolator( interpolator );
+    warpImageFilter->SetOutputSpacing( displacementField->GetSpacing() );
+    warpImageFilter->SetOutputOrigin( displacementField->GetOrigin() );
+    warpImageFilter->SetOutputDirection( displacementField->GetDirection() );
+    warpImageFilter->SetDisplacementField( displacementField );
+    warpImageFilter->SetInput( inputImage );
+    
+    warpedImage = warpImageFilter->GetOutput();
+    warpedImage->Update();
+    
+	  std::cout << "Saving output image..." << std::endl;
+    ImageWriterType::Pointer outputImageWriter = ImageWriterType::New();
+	  outputImageWriter->SetInput( warpedImage );
+    outputImageWriter->SetFileName( predictionMatrixFilename.c_str() );
+
   }
-  
-  // If v_hat has been set as input param, write prediction as mha-field.
-  // This, however, requires a templatefield to be given.
-  if( !predictionFieldFilename.empty() && !templateFieldFilename.empty() )
-  {
-    std::cout << "  Saving prediction output as field data (.mha) ... " << std::flush;
-    icnsSurrogateBasedMotionPredictionHelpers::SaveVnlVectorAsVectorField( prediction, predictionFieldFilename, templateFieldFilename, maskFilename );
-    std::cout << "OK." << std::endl;
-  }
- 
+
   // -------------------------------------------------------------
 
   std::cout << "------------------------------------------" << std::endl;
-  std::cout << "icnsGenericMLRPrediction finished."         << std::endl;
+  std::cout << "imiGenericMLRPrediction finished."          << std::endl;
   std::cout << "==========================================" << std::endl;
 
   return EXIT_SUCCESS;
