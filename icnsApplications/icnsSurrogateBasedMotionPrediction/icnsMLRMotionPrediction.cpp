@@ -122,7 +122,7 @@ bool icnsMLRMotionPrediction::TrainLSEstimator( void )
   
   if (m_centeredRegressorMatrix.rows() <= m_centeredRegressorMatrix.cols())
   {
-    m_trainedEstimator = m_centeredObservationMatrix * (m_centeredRegressorMatrix.transpose() * m_squareMatrixPInv);
+    m_trainedEstimator = m_centeredObservationMatrix * (m_centeredRegressorMatrix.transpose() * m_invSquareMatrixPInv);
   }
   else
   {
