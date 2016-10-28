@@ -277,8 +277,8 @@ int main( int argc, char *argv[] )
   //RPCAFilter->Delete();
 
   std::cout << "RPCA execution finished." << std::endl;
-  //imiINFO( " Process time needed:  " << imi::imiTime::getProcessTime() );
-  //imiINFO( " Overall time needed:  " << imiTime::getMonotonicTime() <<"\n" );
+  //std::cout << " Process time needed:  " << imi::imiTime::getProcessTime() );
+  //std::cout << " Overall time needed:  " << imiTime::getMonotonicTime() <<"\n" );
 
   return EXIT_SUCCESS;
 }

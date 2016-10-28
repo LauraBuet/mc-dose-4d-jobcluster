@@ -42,24 +42,22 @@ typedef itk::LinearInterpolateImageFunction<ImageType, double> LinearInterpolato
 
 void PrintHelp()
 {
-  std::cout << "\n";
-  std::cout << "Usage :\n";
-  std::cout << "icnsImageResampling -I <input image> -O <output image> [-x  <x spacing>] [-y <y spacing>] [-z <z spacing>] \n\n";
-    
-  std::cout << "-I <input image>               Filename of the input image.\n";
-  std::cout << "-R <reference image>           Filename of optional reference image.\n";
-  std::cout << "-O <output image>              Filename of the output image.\n";
-  std::cout << "-x <x spacing>                 X spacing of output image (default = input x spacing).\n";
-  std::cout << "-y <y spacing>                 Y spacing of output image (default = input y spacing).\n";
-  std::cout << "-z <z spacing>                 Z spacing of output image (default = input z spacing).\n";
-  
-  std::cout << "-b                             Process binary input image.\n";
-  std::cout << "-l                             Use linear interpolation (default).\n";
-  std::cout << "-n                             Use nearest neighbor interpolation.\n";
-  std::cout << "-s                             Use cubic B-spline interpolation.\n";
-  
-  std::cout << "-h                             Print this help.\n";
-  std::cout << "\n";
+  std::cout << std::endl;
+  std::cout << "Usage:" << std::endl;
+  std::cout << "icnsImageResampling -I <input image> -O <output image> [-x  <x spacing>] [-y <y spacing>] [-z <z spacing>]" << std::endl;
+  std::cout << std::endl;
+  std::cout << "-I <input image>               Filename of the input image." << std::endl;
+  std::cout << "-R <reference image>           Filename of optional reference image." << std::endl;
+  std::cout << "-O <output image>              Filename of the output image." << std::endl;
+  std::cout << "-x <x spacing>                 X spacing of output image (default = input x spacing)." << std::endl;
+  std::cout << "-y <y spacing>                 Y spacing of output image (default = input y spacing)." << std::endl;
+  std::cout << "-z <z spacing>                 Z spacing of output image (default = input z spacing)." << std::endl;
+  std::cout << "-b                             Process binary input image." << std::endl;
+  std::cout << "-l                             Use linear interpolation (default)." << std::endl;
+  std::cout << "-n                             Use nearest neighbor interpolation." << std::endl;
+  std::cout << "-s                             Use cubic B-spline interpolation." << std::endl;
+  std::cout << "-h                             Print this help." << std::endl;
+  std::cout << std::endl;
 }
 
 
@@ -75,9 +73,10 @@ int main( int argc, char *argv[] )
     return EXIT_FAILURE;
   }
   
+  std::cout << std::endl;
   std::cout << "==========================================" << std::endl;
-  std::cout << "icnsImageResampling" << std::endl;
-  std::cout << "==========================================" << std::endl;
+  std::cout << "icnsImageResampling"                        << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
   std::cout << "Reading parameters ..." << std::endl;
   
   // Initializing parameters with default values:
@@ -152,7 +151,6 @@ int main( int argc, char *argv[] )
       case '?':
         PrintHelp();
         return EXIT_SUCCESS;
-        break;
       default:
         std::cout << "  Argument " << (char)c << " not processed!\n" << std::endl;
         return EXIT_FAILURE;

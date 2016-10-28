@@ -32,16 +32,15 @@ typedef itk::HistogramMatchingImageFilter<ImageType, ImageType> HistogramMatchin
 
 void PrintHelp()
 {
-    std::cout << "\n";
-    std::cout << "Usage :\n";
-    std::cout << "icnsImageHistogramMatching -R <reference image> -T <target image> -O <output image> [...]\n\n";
-    
-    std::cout << "-R <reference image>           Filename of input reference image.\n";
-    std::cout << "-T <target image>              Filename of input target image.\n";
-    std::cout << "-O <output image>              Filename of the transformed target image (= output image).\n";
-
-    std::cout << "-h                             Print this help.\n";
-    std::cout << "\n";
+  std::cout << std::endl;
+  std::cout << "Usage:" << std::endl;
+  std::cout << "icnsImageHistogramMatching -R <reference image> -T <target image> -O <output image> [...]" << std::endl;
+  std::cout << std::endl;
+  std::cout << "-R <reference image>           Filename of input reference image." << std::endl;
+  std::cout << "-T <target image>              Filename of input target image." << std::endl;
+  std::cout << "-O <output image>              Filename of the transformed target image (= output image)." << std::endl;
+  std::cout << "-h                             Print this help." << std::endl;
+  std::cout << std::endl;
 }
 
 
@@ -57,10 +56,11 @@ int main( int argc, char *argv[] )
     return EXIT_FAILURE;
   }
   
+  std::cout << std::endl;
   std::cout << "==========================================" << std::endl;
-  std::cout << "icnsImageHistogramMatching" << std::endl;
-  std::cout << "==========================================" << std::endl;
-  std::cout << "Reading parameters...\n" << std::endl;
+  std::cout << "icnsImageHistogramMatching                " << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
+  std::cout << "Reading parameters ..." << std::endl;
   
   // Initializing parameters with default values:
   
@@ -90,8 +90,7 @@ int main( int argc, char *argv[] )
       case 'h':
       case '?':
         PrintHelp();
-        return EXIT_FAILURE;
-        break;
+        return EXIT_SUCCESS;
       default:
         std::cout << "  Argument " << (char)c << " not processed!\n" << std::endl;
         return EXIT_FAILURE;

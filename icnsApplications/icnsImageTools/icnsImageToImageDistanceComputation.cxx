@@ -50,19 +50,18 @@ typedef itk::TranslationTransform<double, 3>                               Trans
 
 void PrintHelp()
 {
-    std::cout << "\n";
-    std::cout << "Usage :\n";
-    std::cout << "icnsImageToImageDistanceComputation -I <input image 1> <input image 2> -M <mask image> -o <metric type>\n\n";
-    
-    std::cout << "-I <image 1> <image 2>         Filenames of images to be compared.\n";
-    std::cout << "-M <mask image>                Filename of mask image to restrict copmutation to.\n";
-    std::cout << "-O <output image>              Filename of the output (=transformed) image.\n";
-    std::cout << "-o [0]                         Comparison distance measure option.\n";
-    std::cout << "                                 0: mutual information (default).\n";
-    std::cout << "-l <logfile>                   Filename of logfile.\n";
-  
-    std::cout << "-h                             Print this help.\n";
-    std::cout << "\n";
+  std::cout << std::endl;
+  std::cout << "Usage:" << std::endl;
+  std::cout << "icnsImageToImageDistanceComputation -I <input image 1> <input image 2> -M <mask image> -o <metric type>" << std::endl;
+  std::cout << std::endl;
+  std::cout << "-I <image 1> <image 2>         Filenames of images to be compared." << std::endl;
+  std::cout << "-M <mask image>                Filename of mask image to restrict copmutation to." << std::endl;
+  std::cout << "-O <output image>              Filename of the output (=transformed) image." << std::endl;
+  std::cout << "-o [0]                         Comparison distance measure option." << std::endl;
+  std::cout << "                                 0: mutual information (default)." << std::endl;
+  std::cout << "-l <logfile>                   Filename of logfile." << std::endl;
+  std::cout << "-h                             Print this help." << std::endl;
+  std::cout << std::endl;
 }
 
 
@@ -79,8 +78,8 @@ int main( int argc, char *argv[] )
   }
   
   std::cout << "========================================" << std::endl;
-  std::cout << "icnsImageToImageDistanceComputation" << std::endl;
-  std::cout << "========================================" << std::endl;
+  std::cout << "icnsImageToImageDistanceComputation"      << std::endl;
+  std::cout << "----------------------------------------" << std::endl;
   std::cout << "Reading parameters ..." << std::endl;
   
   // Initializing parameters with default values:
@@ -141,8 +140,7 @@ int main( int argc, char *argv[] )
       case 'h':
       case '?':
         PrintHelp();
-        return EXIT_FAILURE;
-        break;
+        return EXIT_SUCCESS;
       default:
         std::cout << "  Argument " << (char)c << " not processed!\n" << std::endl;
         return EXIT_FAILURE;

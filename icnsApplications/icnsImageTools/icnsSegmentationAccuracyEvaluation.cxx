@@ -46,20 +46,18 @@ typedef itk::LabelOverlapMeasuresImageFilter<ImageType> LabelOverlapMeasuresFilt
 
 void PrintHelp()
 {
-  std::cout << "\n";
-  std::cout << "Usage :\n";
-  std::cout << "icnsSegmentationAccuracyEvaluation -R <reference segmentation> -T <test segmentation> [...] \n\n";
-    
-  std::cout << "-R <reference segmentation>    Filename of reference segmentation.\n";
-  std::cout << "-T <test segmentation>         Filename of segmentation to be evaluated.\n";
-  std::cout << "-L <log file>                  Filename of log file.\n";
-    
-  std::cout << "-d [0|1]                       Compute distance measures: Hausdorff distance (NYI).\n";
-  std::cout << "-l                             Lower threshold of intensity interval considered as INSIDE segmentation values (NYI).\n";
-  std::cout << "-h                             Upper threshold of intensity interval considered as INSIDE segmentation values (NYI).\n";
-  
-  std::cout << "-h                             Print this help.\n";
-  std::cout << "\n";
+  std::cout << std::endl;
+  std::cout << "Usage:" << std::endl;
+  std::cout << "icnsSegmentationAccuracyEvaluation -R <reference segmentation> -T <test segmentation> [...]" << std::endl;
+  std::cout << std::endl;
+  std::cout << "-R <reference segmentation>    Filename of reference segmentation." << std::endl;
+  std::cout << "-T <test segmentation>         Filename of segmentation to be evaluated." << std::endl;
+  std::cout << "-L <log file>                  Filename of log file." << std::endl;
+  std::cout << "-d [0|1]                       Compute distance measures: Hausdorff distance (NYI)." << std::endl;
+  std::cout << "-l                             Lower threshold of intensity interval considered as INSIDE segmentation values (NYI)." << std::endl;
+  std::cout << "-h                             Upper threshold of intensity interval considered as INSIDE segmentation values (NYI)." << std::endl;
+  std::cout << "-h                             Print this help." << std::endl;
+  std::cout << std::endl;
 }
 
 
@@ -75,10 +73,11 @@ int main( int argc, char *argv[] )
     PrintHelp();
     return EXIT_FAILURE;
   }
-    
+  
+  std::cout << std::endl;
   std::cout << "==========================================" << std::endl;
-  std::cout << "icnsEvaluateSegmentationAccuracy" << std::endl;
-  std::cout << "==========================================" << std::endl;
+  std::cout << "icnsEvaluateSegmentationAccuracy"           << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
   std::cout << "Reading parameters ..." << std::endl;
     
   // Initializing parameters with default values:
@@ -116,7 +115,6 @@ int main( int argc, char *argv[] )
       case '?':
         PrintHelp();
         return EXIT_SUCCESS;
-        break;
       default:
         std::cout << "  Argument " << (char)c << " not processed!\n" << std::endl;
         return EXIT_FAILURE;
@@ -141,7 +139,7 @@ int main( int argc, char *argv[] )
   // (1/2) Reference segmentation:
   
   std::cout << "----------------------------------------" << std::endl;
-  std::cout << "Loading reference segmentation ... " << std::flush;
+  std::cout << "Loading reference segmentation ... "     << std::flush;
   
   ImageReaderType::Pointer referenceSegmentationReader = ImageReaderType::New();
   referenceSegmentationReader->SetFileName( referenceSegmentationFilename );
@@ -227,15 +225,15 @@ int main( int argc, char *argv[] )
   }
   
 /*
-  imiINFO("--------------------------------------");
-  imiINFO("RESULTS:");
-  imiINFO("       DICE : "<<calculateOverlapMeasures->GetDiceCoefficient() );
-  imiINFO("    JACCARD : "<<calculateOverlapMeasures->GetJaccardCoefficient() );
-  imiINFO("   Center A : "<<calculateOverlapMeasures->GetCenter1() );
-  imiINFO("   Center B : "<<calculateOverlapMeasures->GetCenter2() );
-  imiINFO(" CenterDiff : "<<calculateOverlapMeasures->GetCenterDistance() );
-  imiINFO("   Volume A : "<<calculateOverlapMeasures->GetNumberOfVoxels1() <<" ( "<<calculateOverlapMeasures->GetVolume1()<<" cm^3 )" );
-  imiINFO("   Volume B : "<<calculateOverlapMeasures->GetNumberOfVoxels2() <<" ( "<<calculateOverlapMeasures->GetVolume2()<<" cm^3 )" );
+  std::cout << "--------------------------------------");
+  std::cout << "RESULTS:");
+  std::cout << "       DICE : "<<calculateOverlapMeasures->GetDiceCoefficient() );
+  std::cout << "    JACCARD : "<<calculateOverlapMeasures->GetJaccardCoefficient() );
+  std::cout << "   Center A : "<<calculateOverlapMeasures->GetCenter1() );
+  std::cout << "   Center B : "<<calculateOverlapMeasures->GetCenter2() );
+  std::cout << " CenterDiff : "<<calculateOverlapMeasures->GetCenterDistance() );
+  std::cout << "   Volume A : "<<calculateOverlapMeasures->GetNumberOfVoxels1() <<" ( "<<calculateOverlapMeasures->GetVolume1()<<" cm^3 )" );
+  std::cout << "   Volume B : "<<calculateOverlapMeasures->GetNumberOfVoxels2() <<" ( "<<calculateOverlapMeasures->GetVolume2()<<" cm^3 )" );
 
   if(!bComputeHausdorffDistance)
   {
@@ -263,7 +261,7 @@ int main( int argc, char *argv[] )
 
     double hausdorffDistance = hausdorffDistanceFilter->GetHausdorffDistance();
 
-    imiINFO("   Hausdorff: "<<hausdorffDistance);
+    std::cout << "   Hausdorff: "<<hausdorffDistance);
 
     // Open log file if necessary.
     if( logFilename != NULL )

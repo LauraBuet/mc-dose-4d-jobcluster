@@ -71,7 +71,7 @@ int main( int argc, char *argv[] )
   
   std::cout << "========================================" << std::endl;
   std::cout << "icnsAffineRegistration         " << std::endl;
-  std::cout << "========================================" << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
   std::cout << "Reading parameters ..." << std::endl;
   
   // Initializing parameters with default values:

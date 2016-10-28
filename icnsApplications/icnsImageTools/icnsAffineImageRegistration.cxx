@@ -193,26 +193,25 @@ public:
 
 void PrintHelp()
 {
-  std::cout << "\n";
-  std::cout << "Usage icnsAffineRegistration:\n";
-  std::cout << "icnsAffineRegistration -f <fixed image file> -m <moving image file> -o <output image file>\n\n";
-    
-  std::cout << "-F <image>                 Filename of the fixed image.\n";
-  std::cout << "-M <image>                 Filename of the moving image.\n";
-  std::cout << "-A <transform>             Filename of the output transform.\n";
-  std::cout << "-O <image>                 Filename of the output image.\n";
-  std::cout << "-n <iter>                  Number of iterations (affine and similarity, each level).\n";
-  std::cout << "-l <levels>                Number of multi-resolution levels.\n";
-  std::cout << "-s <length>                Maximum step length of optimization.\n";
-  std::cout << "-p 0|1                     Use similarity pre-registration (default on).\n";
-  std::cout << "-q <iter>                  Number of similarity iterations (use after -n).\n";
-  std::cout << "-c                         Initialize by center of mass matching.\n";
-  std::cout << "-u                         Use NCC metric.\n";
-  std::cout << "-m 0|1                     Use number of its, Min-/MaxStepLength level schedule (default on).\n";
-  std::cout << "-b 0|1|2                   Use best value from all levels and iterations (1), best value from last level (default 2).\n";
-    
-  std::cout << "-h                         Print this help.\n";
-  std::cout << "\n";
+  std::cout << std::endl;
+  std::cout << "Usage icnsAffineRegistration:" << std::endl;
+  std::cout << "icnsAffineRegistration -f <fixed image file> -m <moving image file> -o <output image file>" << std::endl;
+  std::cout << std::endl;
+  std::cout << "-F <image>                 Filename of the fixed image." << std::endl;
+  std::cout << "-M <image>                 Filename of the moving image." << std::endl;
+  std::cout << "-A <transform>             Filename of the output transform." << std::endl;
+  std::cout << "-O <image>                 Filename of the output image." << std::endl;
+  std::cout << "-n <iter>                  Number of iterations (affine and similarity, each level)." << std::endl;
+  std::cout << "-l <levels>                Number of multi-resolution levels." << std::endl;
+  std::cout << "-s <length>                Maximum step length of optimization." << std::endl;
+  std::cout << "-p 0|1                     Use similarity pre-registration (default on)." << std::endl;
+  std::cout << "-q <iter>                  Number of similarity iterations (use after -n)." << std::endl;
+  std::cout << "-c                         Initialize by center of mass matching." << std::endl;
+  std::cout << "-u                         Use NCC metric." << std::endl;
+  std::cout << "-m 0|1                     Use number of its, Min-/MaxStepLength level schedule (default on)." << std::endl;
+  std::cout << "-b 0|1|2                   Use best value from all levels and iterations (1), best value from last level (default 2)." << std::endl;
+  std::cout << "-h                         Print this help." << std::endl;
+  std::cout << std::endl;
 }
 
 
@@ -233,9 +232,10 @@ int main( int argc, char *argv[] )
   typedef itk::ImageFileReader<ImageType>      ImageReaderType;
   typedef itk::ImageFileWriter<ImageType>      ImageWriterType;
 
-  std::cout << "==========================================" << std::endl;
-  std::cout << "icnsAffineRegistration"                     << std::endl;
-  std::cout << "==========================================" << std::endl;
+  std::cout << std::endl;
+  std::cout << "========================================" << std::endl;
+  std::cout << "icnsAffineRegistration"                   << std::endl;
+  std::cout << "----------------------------------------" << std::endl;
   std::cout << "Reading parameters ..." << std::endl;
 
   char* fixedImageFilename       = NULL;

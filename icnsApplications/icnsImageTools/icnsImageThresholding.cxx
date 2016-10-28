@@ -33,19 +33,18 @@ typedef itk::BinaryThresholdImageFilter<ImageType, ImageType> BinaryThresholdFil
 
 void PrintHelp()
 {
-    std::cout << "\n";
-    std::cout << "Usage :\n";
-    std::cout << "icnsImageThresholding -I <input image> -O <output image> -l  <lower threshold> -u <upper threshold> -f <inside value> -b <outside value> \n\n";
-    
-    std::cout << "-I <input image>               Filename of the input image.\n";
-    std::cout << "-O <output image>              Filename of the output image.\n";
-    std::cout << "-l <lower threshold>           Lower threshold (default = min value).\n";
-    std::cout << "-u <upper threshold>           Upper threshold (default = max value).\n";
-    std::cout << "-f <inside>                    Inside output value (default = 1).\n";
-    std::cout << "-b <outside>                   Outside output value (default = 0).\n";
-  
-    std::cout << "-h                             Print this help.\n";
-    std::cout << "\n";
+  std::cout << std::endl;
+  std::cout << "Usage:" << std::endl;
+  std::cout << "icnsImageThresholding -I <input image> -O <output image> -l  <lower threshold> -u <upper threshold> -f <inside value> -b <outside value>" << std::endl;
+  std::cout << std::endl;
+  std::cout << "-I <input image>               Filename of the input image." << std::endl;
+  std::cout << "-O <output image>              Filename of the output image." << std::endl;
+  std::cout << "-l <lower threshold>           Lower threshold (default = min value)." << std::endl;
+  std::cout << "-u <upper threshold>           Upper threshold (default = max value)." << std::endl;
+  std::cout << "-f <inside>                    Inside output value (default = 1)." << std::endl;
+  std::cout << "-b <outside>                   Outside output value (default = 0)." << std::endl;
+  std::cout << "-h                             Print this help.\n";
+  std::cout << std::endl;
 }
 
 
@@ -61,10 +60,10 @@ int main( int argc, char *argv[] )
     return EXIT_FAILURE;
   }
   
-  std::cout << "==========================================" << std::endl;
-  std::cout << "=======    icnsImageThresholding    ======" << std::endl;
-  std::cout << "==========================================" << std::endl;
-  std::cout << "READING parameters...\n" << std::endl;
+  std::cout << "========================================" << std::endl;
+  std::cout << "icnsImageThresholding                   " << std::endl;
+  std::cout << "----------------------------------------" << std::endl;
+  std::cout << "READING parameters ... " << std::endl;
   
   // Initializing parameters with default values:
   

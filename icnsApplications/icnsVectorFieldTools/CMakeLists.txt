@@ -9,5 +9,6 @@ PROJECT( icnsVectorFieldTools )
 
 # Set executable:
 
+ADD_EXECUTABLE( icnsValidateLandmarks icnsValidateLandmarks.cxx )
 ADD_EXECUTABLE( icnsVectorFieldDeformationMetricComputation icnsVectorFieldDeformationMetricComputation.cxx )
 ADD_EXECUTABLE( icnsVectorFieldStatistics icnsVectorFieldStatistics.cxx )

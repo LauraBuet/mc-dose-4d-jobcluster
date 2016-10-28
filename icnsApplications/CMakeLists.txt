@@ -8,6 +8,7 @@ cmake_minimum_required(VERSION 3.0)
 SUBDIRS(
   icnsImageTools
   icnsRobustPCA
+  icnsSurrogateBasedMotionPrediction
   icnsVariationalRegistration
   icnsVectorFieldTools
  # icnsVisualizationTools
