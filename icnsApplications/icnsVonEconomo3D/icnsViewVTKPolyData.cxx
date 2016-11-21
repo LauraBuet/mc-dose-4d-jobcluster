@@ -34,6 +34,7 @@ extern "C"
 #include <vtkActor.h>
 #include <vtkCamera.h>
 #include <vtkMatrix4x4.h>
+#include <vtkPointData.h>
 #include <vtkPolyDataCollection.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkPolyDataReader.h>
@@ -313,6 +314,58 @@ int main( int argc, char *argv[] )
         mapper->ScalarVisibilityOn();
         mapper->UseLookupTableScalarRangeOn();
         mapper->Update();
+        
+        // Checking if LUT range matches scalar range of mesh:
+        
+        std::map<unsigned int, unsigned int> labelStats;
+        vtkSmartPointer<vtkPolyData> currentMesh = static_cast< vtkPolyData* >( polyDataCollection->GetItemAsObject( iFilenames ) );
+        for( vtkIdType iPointID = 0; iPointID < currentMesh->GetNumberOfPoints(); iPointID++ )
+        {
+          double pointCoord[3];
+          currentMesh->GetPoint( iPointID, pointCoord );
+          //std::cout << "Point " << iPointID << " : (" << pointCoord[0] << " " << pointCoord[1] << " " << pointCoord[2] << ")" << std::endl;
+          
+          unsigned int pointScalarValue = currentMesh->GetPointData()->GetArray(0)->GetTuple1( iPointID );
+          auto mapIterator = labelStats.find( pointScalarValue );
+          
+          // Scalar existing in map? If so, increment entry:
+          if( (mapIterator != labelStats.end()) && (!labelStats.empty()) )
+          {
+            labelStats[ pointScalarValue ] = mapIterator->second +1;
+          }
+          else
+          {
+            labelStats[ pointScalarValue ] = 1;
+          }
+          mapIterator = labelStats.find( pointScalarValue );
+          //std::cout << "  LABEL " << mapIterator->first << ": " << mapIterator->second << std::endl;
+        }
+        
+        //std::cout << "In total " << labelStats.size() << " labels!" << std::endl;
+        //auto mapIterator = labelStats.begin();
+        //for( unsigned int iLabels = 0; iLabels < labelStats.size(); iLabels++, mapIterator++ );
+        //{
+        //  std::cout << "  LABEL " << mapIterator->first << ": " << mapIterator->second << std::endl;
+        //}
+        /*std::cout << "Distribution of scalars:" << std::endl;
+        
+        for( unsigned int i=0; i < pointsPerID.size(); i++ )
+        {
+          std::cout << "  LABEL " << i << ": " << pointsPerID[i] << " points" << std::endl;
+        }
+        
+        unsigned int nScalarArrays = outputMesh->GetPointData()->GetNumberOfArrays();
+        if( nScalarArrays > 0 )
+        {
+          std::cout << "Point data associated with " << nScalarArrays << " arrays." << std::endl;
+          std::cout << "Scalar range: [" << outputMesh->GetScalarRange()[0] << "; " <<
+          outputMesh->GetScalarRange()[1] << "] " << std::endl;
+          std::cout << "Number of entries: " << outputMesh->GetPointData()->GetArray(0)->GetNumberOfTuples() << std::endl;
+        }
+        else
+        {
+          std::cout << "No scalar data available." << std::endl;
+        }*/
       }
       else if ( !actorColors.empty() )
       {
@@ -408,7 +461,7 @@ vtkSmartPointer<vtkLookupTable> ReadLUT( std::string filename )
   
   for( unsigned int i = 0; i < LUTEntries.size(); i++ )
   {
-    std::cout << atoi(LUTEntries[i][0].c_str()) << " " <<
+    std::cout << atoi( LUTEntries[i][0].c_str()) << " " <<
                  atof( LUTEntries[i][1].c_str() )/255.0 << " " <<
                  atof( LUTEntries[i][2].c_str() )/255.0 << " " <<
                  atof( LUTEntries[i][3].c_str() )/255.0 << " " <<

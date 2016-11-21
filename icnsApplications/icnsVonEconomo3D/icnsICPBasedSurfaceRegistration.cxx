@@ -109,7 +109,7 @@ int main( int argc, char *argv[] )
         inputMovingMeshFilename = optarg;
         std::cout << "Moving mesh (IN):              " << inputMovingMeshFilename << std::endl;
         break;
-      case 'I':
+      case 'T':
         inputInitialTransformationFilename = optarg;
         std::cout << "Initial transformation (IN):   " << inputInitialTransformationFilename << std::endl;
         break;
@@ -246,14 +246,14 @@ int main( int argc, char *argv[] )
   icp->SetTarget( movingMesh );
   
   //icp->DebugOn();
-  //icp->StartByMatchingCentroidsOn();
+  icp->StartByMatchingCentroidsOn(); // WAS COMMENTED
   
   icp->SetMaximumNumberOfIterations( nIterations );
   //icp->SetMaximumNumberOfLandmarks(target->GetNumberOfPoints());
   icp->SetCheckMeanDistance(1);
   icp->SetMaximumMeanDistance(0.0000001);
-  icp->GetLandmarkTransform()->SetModeToRigidBody();
-  //icp->GetLandmarkTransform()->SetModeToAffine();
+  //icp->GetLandmarkTransform()->SetModeToRigidBody();
+  icp->GetLandmarkTransform()->SetModeToAffine(); // WAS RIGID
   icp->Modified();
   icp->Update();
   icp->Inverse();

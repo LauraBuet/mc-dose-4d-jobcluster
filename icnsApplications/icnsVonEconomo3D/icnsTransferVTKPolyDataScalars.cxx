@@ -37,7 +37,7 @@ extern "C"
 
 void PrintHelp()
 {
-  std::cout << std::endl;
+  std::cout << std::endl; 
   std::cout << "Usage:" << std::endl;
   std::cout << "icnsTransferVTKPolyDataScalars -S <source mesh> -T <target mesh> [...]" << std::endl;
   std::cout << std::endl;

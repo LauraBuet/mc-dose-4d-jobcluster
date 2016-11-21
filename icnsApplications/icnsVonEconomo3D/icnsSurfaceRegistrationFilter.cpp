@@ -43,7 +43,10 @@ imiSurfaceRegistrationFilter::imiSurfaceRegistrationFilter()
   m_bAbortRegistration = false;
   m_bIsInitialized = false;
 
+  
   m_EpsilonDist = 0.0001;
+  //m_EpsilonDist = 0.00001;
+  //m_EpsilonDist = 0.00000001;
 
   m_sDebugPathName = "";
   m_sLogFileName = "";
