@@ -252,8 +252,8 @@ int main( int argc, char *argv[] )
   //icp->SetMaximumNumberOfLandmarks(target->GetNumberOfPoints());
   icp->SetCheckMeanDistance(1);
   icp->SetMaximumMeanDistance(0.0000001);
-  //icp->GetLandmarkTransform()->SetModeToRigidBody();
-  icp->GetLandmarkTransform()->SetModeToAffine(); // WAS RIGID
+  icp->GetLandmarkTransform()->SetModeToRigidBody();
+  //icp->GetLandmarkTransform()->SetModeToAffine(); // WAS RIGID
   icp->Modified();
   icp->Update();
   icp->Inverse();

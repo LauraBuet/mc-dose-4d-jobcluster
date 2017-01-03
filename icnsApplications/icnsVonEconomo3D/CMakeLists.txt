@@ -54,6 +54,7 @@ ADD_EXECUTABLE(icnsViewVTKPolyData MACOSX_BUNDLE icnsViewVTKPolyData.cxx vtkText
 ADD_EXECUTABLE(icnsAppendVTKPolyData MACOSX_BUNDLE icnsAppendVTKPolyData.cxx vtkTexturingHelper.h vtkTexturingHelper.cpp)
 ADD_EXECUTABLE(icnsFlipVTKPolyData MACOSX_BUNDLE icnsFlipVTKPolyData.cxx vtkTexturingHelper.h vtkTexturingHelper.cpp)
 ADD_EXECUTABLE(icnsTransferVTKPolyDataScalars MACOSX_BUNDLE icnsTransferVTKPolyDataScalars.cxx vtkTexturingHelper.h vtkTexturingHelper.cpp)
+ADD_EXECUTABLE(icnsTransformVTKPolyData MACOSX_BUNDLE icnsTransformVTKPolyData.cxx )
  
 # Define libraries to link:
 
@@ -62,6 +63,7 @@ target_link_libraries(icnsViewVTKPolyData ${VTK_LIBRARIES})
 target_link_libraries(icnsAppendVTKPolyData ${VTK_LIBRARIES})
 target_link_libraries(icnsFlipVTKPolyData ${VTK_LIBRARIES})
 target_link_libraries(icnsTransferVTKPolyDataScalars ${VTK_LIBRARIES})
+target_link_libraries(icnsTransformVTKPolyData ${VTK_LIBRARIES})
 
 target_link_libraries(icnsManualSurfaceRegistration ${VTK_LIBRARIES})
 target_link_libraries(icnsLandmarkBasedSurfaceRegistration ${VTK_LIBRARIES})
