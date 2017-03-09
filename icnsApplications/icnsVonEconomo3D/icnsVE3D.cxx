@@ -32,21 +32,27 @@ extern "C"
 
 // VTK includes:
 #include <vtkActor.h>
+#include <vtkActor2DCollection.h>
 #include <vtkCallbackCommand.h>
 #include <vtkCamera.h>
 #include <vtkCommand.h>
 #include <vtkMatrix4x4.h>
 #include <vtkPointData.h>
+#include <vtkPointPicker.h>
 #include <vtkPolyDataCollection.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkPolyDataReader.h>
-#include <vtkTransformPolyDataFilter.h>
 #include <vtkProperty.h>
+#include <vtkPropPicker.h>
 #include <vtkRenderer.h>
 #include <vtkRendererCollection.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkSmartPointer.h>
+#include <vtkSphereSource.h>
+#include <vtkTextActor.h>
+#include <vtkTextProperty.h>
+#include <vtkTransformPolyDataFilter.h>
 
 #include <vtkLookupTable.h>
 
@@ -64,7 +70,7 @@ void PrintHelp()
 {
   std::cout << std::endl;
   std::cout << "Usage:" << std::endl;
-  std::cout << "icnsViewVTKPolyData -I <list of vtk meshes> [...] \n"  << std::endl;
+  std::cout << "icnsVE3D -P <Path to vtk data> [...] \n"  << std::endl;
   std::cout << std::endl;
   std::cout << "-I <list of vtk meshes>             Filename list of meshes to be displayed." << std::endl;
   std::cout << "                                    Possible endings: VTK or OBJ." << std::endl;
@@ -76,6 +82,8 @@ void PrintHelp()
   std::cout << std::endl;
   std::cout << "-c <list of colors>                 Colors to be assigned to actors (not for texture mode!)." << std::endl;
   std::cout << "-l <list of LUTs>                   LUTs to be assigned to actor mappers (not for texture mode!)." << std::endl;
+  std::cout << "-a <list of area/scalar names>      XXX (not for texture mode!)." << std::endl;
+  std::cout << "-s <list of area/scalar stats>      XXX (not for texture mode!)." << std::endl;
   std::cout << "-h                                  Print this help." << std::endl;
   std::cout << std::endl;
 }
@@ -88,6 +96,10 @@ static void ClickCallbackFunction ( vtkObject* caller,
                                     long unsigned int eventId,
                                     void* clientData,
                                     void* callData );
+static void MouseClickCallbackFunction ( vtkObject* caller,
+                                         long unsigned int eventId,
+                                         void* clientData,
+                                         void* callData );
 
 vtkSmartPointer<vtkLookupTable> ReadLUT( std::string lutFilename, std::vector< std::string >& scalarNames );
 vtkMatrix4x4* Read4x4Matrix( std::string filename );
@@ -118,16 +130,75 @@ int main( int argc, char *argv[] )
   std::vector<unsigned int>  inputNumberOfTextureFiles;
   std::vector<std::string>   inputTransforms;
   
-  std::vector<std::string>   labelNames;
+  // Note: for each individual actor there could be a different LUT and different area names.
+  std::vector< std::vector< std::string > > labelNames;
   
   std::vector<std::string>   actorColors;
   std::vector<std::string>   mapperLUTs;
+  
   
   bool readingOBJdata = false;
   
   // Initializing renderer:
   
   vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
+
+  // Generating text actor as first actor to connect to renderer:
+  
+  unsigned int renderWindowSize_x = 800;
+  unsigned int renderWindowSize_y = 600;
+  
+  vtkSmartPointer<vtkTextActor> textActorHeadline = vtkSmartPointer<vtkTextActor>::New();
+  textActorHeadline->SetInput( "ICNS virtual von Economo 3D atlas" );
+  textActorHeadline->SetPosition( 10, renderWindowSize_y-40 );
+  textActorHeadline->GetTextProperty()->SetFontSize ( 24 );
+  textActorHeadline->GetTextProperty()->SetColor ( 1.0, 1.0, 1.0 );
+  renderer->AddActor2D( textActorHeadline );
+  
+  vtkSmartPointer<vtkTextActor> textActorRegionName = vtkSmartPointer<vtkTextActor>::New();
+  textActorRegionName->SetInput( "LC2: area cingularis posterior ventralis" );
+  textActorRegionName->SetPosition( 10, renderWindowSize_y-80 );
+  textActorRegionName->GetTextProperty()->SetFontSize ( 14 );
+  textActorRegionName->GetTextProperty()->SetColor ( 1.0, 1.0, 1.0 );
+  textActorRegionName->GetTextProperty()->BoldOn();
+  renderer->AddActor2D ( textActorRegionName );
+  
+  vtkSmartPointer<vtkTextActor> textActorRegionProps = vtkSmartPointer<vtkTextActor>::New();
+  
+  std::string regionPropText_thickness = "";
+  regionPropText_thickness +=  "Overall area thickness [mm]:  2.43 mm\n";
+  regionPropText_thickness +=  "Layer I [mm]:  0.25\n";
+  regionPropText_thickness +=  "Layer II [mm]:  0.18\n";
+  regionPropText_thickness +=  "Layer III [mm]:  0.52\n";
+  regionPropText_thickness +=  "Layer IV [mm]:  0.24\n";
+  regionPropText_thickness +=  "Layer V [mm]:  0.44\n";
+  regionPropText_thickness +=  "Layer VIa [mm]:  0.45\n";
+  regionPropText_thickness +=  "Layer VIb [mm]:  0.35\n";
+  
+  textActorRegionProps->SetInput( regionPropText_thickness.c_str() );
+  textActorRegionProps->SetPosition( 10, renderWindowSize_y-205 );
+  textActorRegionProps->GetTextProperty()->SetFontSize ( 12 );
+  textActorRegionProps->GetTextProperty()->SetColor ( 1.0, 1.0, 1.0 );
+  renderer->AddActor2D ( textActorRegionProps );
+  
+  vtkSmartPointer<vtkTextActor> textActorCellSize = vtkSmartPointer<vtkTextActor>::New();
+  
+  std::string regionPropText_cellSize = "";
+  regionPropText_cellSize +=  "Overall area cell density [cells/mm^3]:  39.453\n";
+  regionPropText_cellSize +=  "Layer I [cells/mm^3]:  514\n";
+  regionPropText_cellSize +=  "Layer II [cells/mm^3]:  5.185\n";
+  regionPropText_cellSize +=  "Layer III [cells/mm^3]:  5.564\n";
+  regionPropText_cellSize +=  "Layer IV [cells/mm^3]:  11.852\n";
+  regionPropText_cellSize +=  "Layer V [cells/mm^3]:  6.337\n";
+  regionPropText_cellSize +=  "Layer VIa [cells/mm^3]:  7.407\n";
+  regionPropText_cellSize +=  "Layer VIb [cells/mm^3]:  2.593\n";
+  
+  textActorCellSize->SetInput( regionPropText_cellSize.c_str() );
+  textActorCellSize->SetPosition( 10, renderWindowSize_y-320 );
+  textActorCellSize->GetTextProperty()->SetFontSize ( 12 );
+  textActorCellSize->GetTextProperty()->SetColor ( 1.0, 1.0, 1.0 );
+  renderer->AddActor2D ( textActorCellSize );
+
   
   // Reading parameters.
   // Note that the filnames of the lists are considered to *not* contain
@@ -318,7 +389,9 @@ int main( int argc, char *argv[] )
           ( std::strcmp( mapperLUTs[iFilenames].c_str(), "NONE" ) != 0 ) )
       {
         std::cout << "Reading LUT from file: " << mapperLUTs[iFilenames] << " ... " << std::endl;
-        vtkSmartPointer<vtkLookupTable> lut = ReadLUT( mapperLUTs[iFilenames], labelNames );
+        std::vector< std::string > mapperLUTLabelNames;
+        vtkSmartPointer<vtkLookupTable> lut = ReadLUT( mapperLUTs[iFilenames], mapperLUTLabelNames );
+        labelNames.push_back( mapperLUTLabelNames );
         
         mapper->SetLookupTable( lut );
         mapper->ScalarVisibilityOn();
@@ -396,31 +469,50 @@ int main( int argc, char *argv[] )
   vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
   renderWindow->AddRenderer(renderer);
   
-  // An interactor:
+  // An interactor and interactor style:
   
   vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
   renderWindowInteractor->SetRenderWindow( renderWindow );
   
-  // Create appropriate interactor/interaction style:
-  //vtkSmartPointer<MouseInteractorStylePP> style =
-  //  vtkSmartPointer<MouseInteractorStylePP>::New();
-  //vtkSmartPointer<vtkInteractorStyleTrackballCamera> style = vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
-  //renderWindowInteractor->SetInteractorStyle(style);
-  //style->SetCurrentRenderer(renderer);
+  vtkSmartPointer<vtkInteractorStyleSwitch> interactorStyle = vtkSmartPointer<vtkInteractorStyleSwitch>::New();
+  interactorStyle->SetCurrentStyleToTrackballCamera();
+  
+  renderWindowInteractor->SetInteractorStyle( interactorStyle );
+  
+  // Prepare for observers.
+  // First: callback data
+  
+  std::vector< std::vector< std::string > > callbackClientData;
+  
+  std::vector< std::string > verboseModeActivated;
+  verboseModeActivated.push_back( "FALSE" );
+  callbackClientData.push_back( verboseModeActivated );
+  
+  callbackClientData.insert( callbackClientData.end(), labelNames.begin(), labelNames.end());
   
   // Generating callback to reset actor transformations on return press:
   
   vtkSmartPointer<vtkCallbackCommand> clickCallback = vtkSmartPointer<vtkCallbackCommand>::New();
   clickCallback->SetCallback( ClickCallbackFunction );
+  clickCallback->SetClientData( &callbackClientData );
   renderWindowInteractor->AddObserver( vtkCommand::KeyPressEvent, clickCallback );
   
-  renderer->SetBackground( 1.0, 1.0, 1.0 ); // Background color white
+  // Generating callback to show specific region information
+  
+  vtkSmartPointer<vtkCallbackCommand> mouseClickCallback = vtkSmartPointer<vtkCallbackCommand>::New();
+  mouseClickCallback->SetCallback( MouseClickCallbackFunction );
+  mouseClickCallback->SetClientData( &callbackClientData );
+  renderWindowInteractor->AddObserver( vtkCommand::LeftButtonPressEvent, mouseClickCallback );
+  
+  // Set up remaining parts of renderer and render window:
+  
+  //renderer->SetBackground( 1.0, 1.0, 1.0 ); // Background color white
   renderer->GradientBackgroundOn();
-  renderer->SetBackground( 1, 1, 1);
-  renderer->SetBackground2( 0, 0, 0);
+  renderer->SetBackground( 1, 1, 1 );
+  renderer->SetBackground2( 0, 0, 0 );
   renderer->ResetCamera();
   
-  renderWindow->SetSize( 800, 600 );
+  renderWindow->SetSize( renderWindowSize_x, renderWindowSize_y );
   renderWindow->Render();
   
   // -------------------------------------------------------------
@@ -578,9 +670,9 @@ std::vector<float> ConvertColorStringToRGB( std::string colorString )
 // ---------------------------------------------------------------
 
 void ClickCallbackFunction( vtkObject *caller,
-                           long unsigned int eventID,
-                           void * clientData,
-                           void * callData )
+                            long unsigned int eventID,
+                            void * clientData,
+                            void * callData )
 {
   // Get the calling interactor:
   
@@ -592,18 +684,17 @@ void ClickCallbackFunction( vtkObject *caller,
   if( key == "Return" )
   {
     //std::cout << "----------------------------------------" << std::endl;
-    std::cout << "Reset actor transform" << std::endl;
+    //std::cout << "Reset actor transform" << std::endl;
     
     // Get current renderer from caller data to extract desired actors:
     
     vtkSmartPointer<vtkRenderer> currentRenderer = iren->GetRenderWindow()->GetRenderers()->GetFirstRenderer();
     std::cout << "No Renderers: " << iren->GetRenderWindow()->GetRenderers()->GetNumberOfItems() << std::endl;
     
-    unsigned int nActors = currentRenderer->GetActors()->GetNumberOfItems();
-    
     // Iterate over actors:
     
-    for( unsigned int iActors = 0; iActors < currentRenderer->GetActors()->GetNumberOfItems(); iActors++ )
+    unsigned int nActors = currentRenderer->GetActors()->GetNumberOfItems();
+    for( unsigned int iActors = 0; iActors < nActors; iActors++ )
     {
       vtkSmartPointer<vtkActor> currentActor       = static_cast<vtkActor*>( currentRenderer->GetActors()->GetItemAsObject( iActors ) );
       vtkMatrix4x4* currentTransformMatrix         = currentActor->GetMatrix();
@@ -623,4 +714,101 @@ void ClickCallbackFunction( vtkObject *caller,
     currentRenderer->Render();
     iren->GetRenderWindow()->Render();
   } // end of callback "RETURN"
+  
+  if( key == "v" )
+  {
+    std::vector< std::vector< std::string > >* clientDataAsVector = static_cast< std::vector< std::vector< std::string > >* >( clientData );
+    if( clientDataAsVector->at(0).at(0) == "FALSE" )
+    {
+      clientDataAsVector->at(0).at(0) = "MODIFIED";
+    }
+    else
+    {
+      if( clientDataAsVector->at(0).at(0) == "TRUE" )
+      {
+        iren->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->RemoveActor(
+          iren->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->GetActors()->GetLastItem()
+        );
+        iren->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->Render();
+        iren->GetRenderWindow()->Render();
+      }
+      clientDataAsVector->at(0).at(0) = "FALSE";
+    }
+    clientData = clientDataAsVector;
+  }
+} // end of ClickCallbackFunction()
+
+
+void MouseClickCallbackFunction( vtkObject *caller,
+                           long unsigned int eventID,
+                           void * clientData,
+                           void * callData )
+{
+  std::vector< std::vector< std::string > >* clientDataAsVector = static_cast<std::vector< std::vector< std::string > > * >( clientData );
+  vtkRenderWindowInteractor *iren = static_cast<vtkRenderWindowInteractor*>(caller);
+  
+  if( clientDataAsVector->at(0).at(0) == "FALSE" )
+  {
+    return;
+  }
+  
+  // Determine picked actor and point:
+  
+  vtkSmartPointer<vtkPropPicker> propPicker = vtkSmartPointer<vtkPropPicker>::New();
+  propPicker->Pick( iren->GetEventPosition()[0],
+                    iren->GetEventPosition()[1],
+                    0,  // always zero.
+                    iren->GetRenderWindow()->GetRenderers()->GetFirstRenderer() );
+  
+  double pickedPosition[3];
+  propPicker->GetPickPosition( pickedPosition );
+  if( ( pickedPosition[0] == 0 ) && ( pickedPosition[1] == 0 ) && ( pickedPosition[2] == 0 ) )
+    return;
+  
+  vtkIdType pickedPointID = propPicker->GetActor()->GetMapper()->GetInput()->FindPoint( pickedPosition );
+  unsigned int pickedPointScalar = propPicker->GetActor()->GetMapper()->GetInput()->GetPointData()->GetArray(0)->GetTuple1( pickedPointID );
+  
+  // Remove last highlighted point:
+  
+  if( clientDataAsVector->at(0).at(0) == "TRUE" )
+  {
+    iren->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->RemoveActor(
+      iren->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->GetActors()->GetLastItem() );
+  }
+  
+  // Which actor has been picked?
+  unsigned int iActors = 0;
+  for( ; iActors < iren->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->GetActors()->GetNumberOfItems(); iActors++ )
+  {
+    if( iren->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->GetActors()->GetItemAsObject(iActors) == propPicker->GetActor() )
+      break;
+  }
+  
+  // Drawing spheres at picked positions:
+  
+  vtkSmartPointer<vtkSphereSource> newSphereSource = vtkSmartPointer<vtkSphereSource>::New();
+  newSphereSource->SetRadius( 2 );
+  newSphereSource->SetCenter( pickedPosition );
+  
+  vtkSmartPointer<vtkPolyDataMapper> newMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+  newMapper->SetInputConnection( newSphereSource->GetOutputPort() );
+  
+  vtkSmartPointer<vtkActor> newActor = vtkSmartPointer<vtkActor>::New();
+  newActor->SetMapper( newMapper );
+  newActor->GetProperty()->SetColor(1,0,0);
+  
+  // Changing text of textactors:
+  
+  vtkSmartPointer<vtkTextActor> currentActor = static_cast<vtkTextActor*>( iren->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->GetActors2D()->GetItemAsObject( 1 ) );
+  std::string newTextInput = clientDataAsVector->at(1+iActors).at( pickedPointScalar );
+  currentActor->SetInput( newTextInput.c_str() );
+  
+  // Re-rendering data:
+  
+  iren->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->AddViewProp( newActor );
+  iren->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->Render();
+  
+  clientDataAsVector->at(0).at(0) = "TRUE";
+  clientData = clientDataAsVector;
+  
 } // end of ClickCallbackFunction()
