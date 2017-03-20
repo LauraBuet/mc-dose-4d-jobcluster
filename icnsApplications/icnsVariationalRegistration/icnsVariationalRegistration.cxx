@@ -478,10 +478,13 @@ int main( int argc, char *argv[] )
   
   // First: loading fixed and moving image
   
+  ImageReaderType::Pointer fixedImageReader;
+  ImageReaderType::Pointer movingImageReader;
+  
   if( temporalImageSequenceDirectory == NULL )
   {
     std::cout << "  -> Reference image ... " << std::flush;
-    ImageReaderType::Pointer fixedImageReader = ImageReaderType::New();
+    fixedImageReader = ImageReaderType::New();
     fixedImageReader->SetFileName( fixedImageFilename );
     try
     {
@@ -495,11 +498,10 @@ int main( int argc, char *argv[] )
     }
     fixedImage = fixedImageReader->GetOutput();
     fixedImage->Update();
-    fixedImage->DisconnectPipeline();
     std::cout << "OK." << std::endl;
   
-    std::cout << "  Moving image ... " << std::flush;
-    ImageReaderType::Pointer movingImageReader = ImageReaderType::New();
+    std::cout << "  -> Moving image ... " << std::flush;
+    movingImageReader = ImageReaderType::New();
     movingImageReader->SetFileName( movingImageFilename );
     try
     {
@@ -511,10 +513,10 @@ int main( int argc, char *argv[] )
       std::cerr << excp << std::endl;
       return EXIT_FAILURE;
     }
-    ImageType::Pointer movingImage = movingImageReader->GetOutput();
+    movingImage = movingImageReader->GetOutput();
     movingImage->Update();
-    movingImage->DisconnectPipeline();
     std::cout << "OK." << std::endl;
+    
   }
   else
   {
