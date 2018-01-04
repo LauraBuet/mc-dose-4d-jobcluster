@@ -1,7 +1,7 @@
 /** \file icnsImageToImageDistanceComputation.cxx
  *
  *  \b Initial \b Author: Rene Werner \n\n
- *  \b Copyright (C) 2016 Department of Computational Neuroscience,
+ *  \b Copyright (C) 2017 Department of Computational Neuroscience,
  *     University Medical Center Hamburg-Eppendorf
  *
  ****************************************************************************/
@@ -14,35 +14,54 @@ extern "C"
 }
 
 // ITK includes:
-//#include <itkAffineTransform.h>
-//#include <itkBSplineInterpolateImageFunction.h>
 #include <itkImage.h>
 #include <itkImageFileReader.h>
 #include <itkImageFileWriter.h>
-#include <itkImageRegionIterator.h>
-#include <itkImageToImageMetric.h>
+#include <itkCastImageFilter.h>
+#include <itkImageMaskSpatialObject.h>
+
 #include <itkMeanSquaresImageToImageMetric.h>
 #include <itkNormalizedCorrelationImageToImageMetric.h>
+#include <itkMutualInformationImageToImageMetric.h>
+#include <itkNormalizedMutualInformationHistogramImageToImageMetric.h>
+
 #include <itkLinearInterpolateImageFunction.h>
 #include <itkTranslationTransform.h>
-#include <itkImageMaskSpatialObject.h>
-//#include <itkNearestNeighborInterpolateImageFunction.h>
-//#include <itkResampleImageFilter.h>
-//#include <itkTransformFileReader.h>
+#include <itkNormalizeImageFilter.h>
+#include <itkDiscreteGaussianImageFilter.h>
 
 // Project includes: NONE so far.
 
 // Global typedefs:
-typedef itk::Image<short, 3>                                               ImageType;
-typedef itk::ImageFileReader<ImageType>                                    ImageReaderType;
-typedef itk::ImageFileWriter<ImageType>                                    ImageWriterType;
-typedef itk::ImageMaskSpatialObject<3>                                     MaskType;
-typedef itk::NormalizedCorrelationImageToImageMetric<ImageType, ImageType> MutualInformationMetricType;
-typedef MaskType::ImageType                                                SOImageType;
-typedef itk::LinearInterpolateImageFunction<ImageType, double>             InterpolatorType;
-typedef itk::TranslationTransform<double, 3>                               TransformType;
-//typedef itk::BSplineInterpolateImageFunction<ImageType>         BSplineInterpolatorType;
+typedef itk::Image<short, 3>                                   ImageType;
+typedef itk::ImageFileReader<ImageType>                        ImageReaderType;
+typedef itk::ImageFileWriter<ImageType>                        ImageWriterType;
+typedef itk::Image<unsigned char, 3>                           MaskImageType;
+typedef itk::Image<double, 3>                                  InternalImageType;
+typedef itk::LinearInterpolateImageFunction<ImageType, double> InterpolatorType;
+typedef itk::LinearInterpolateImageFunction<InternalImageType, double> InternalImageTypeInterpolatorType;
+typedef itk::TranslationTransform<double, 3>                   TransformType;
+typedef itk::CastImageFilter<ImageType, MaskImageType>         CastFilterType;
 
+
+// ---------------------------------------------------------------
+// Declaration of additional routines:
+// ---------------------------------------------------------------
+
+double ComputeMSD( const ImageType::Pointer image1,
+                   const ImageType::Pointer image2,
+                   const MaskImageType::Pointer mask,
+                   const bool useMask );
+
+double ComputeMI( const ImageType::Pointer image1,
+                  const ImageType::Pointer image2,
+                  const MaskImageType::Pointer mask,
+                  const bool useMask );
+
+double ComputeNCC( const ImageType::Pointer image1,
+                   const ImageType::Pointer image2,
+                   const MaskImageType::Pointer mask,
+                   const bool useMask );
 
 // ---------------------------------------------------------------
 // Print help routine:
@@ -52,13 +71,15 @@ void PrintHelp()
 {
   std::cout << std::endl;
   std::cout << "Usage:" << std::endl;
-  std::cout << "icnsImageToImageDistanceComputation -I <input image 1> <input image 2> -M <mask image> -o <metric type>" << std::endl;
+  std::cout << "icnsImageToImageDistanceComputation -I <input image 1> <input image 2> -M <mask image> -m <metric type>" << std::endl;
   std::cout << std::endl;
   std::cout << "-I <image 1> <image 2>         Filenames of images to be compared." << std::endl;
-  std::cout << "-M <mask image>                Filename of mask image to restrict copmutation to." << std::endl;
-  std::cout << "-O <output image>              Filename of the output (=transformed) image." << std::endl;
-  std::cout << "-o [0]                         Comparison distance measure option." << std::endl;
-  std::cout << "                                 0: mutual information (default)." << std::endl;
+  std::cout << "-M <mask image>                Filename of mask image to restrict computation to." << std::endl;
+  std::cout << "-m [0]                         Comparison distance measure option." << std::endl;
+  std::cout << "                                 0: all (default)." << std::endl;
+  std::cout << "                                 1: MSD." << std::endl;
+  std::cout << "                                 2: NCC." << std::endl;
+  std::cout << "                                 3: NMI." << std::endl;
   std::cout << "-l <logfile>                   Filename of logfile." << std::endl;
   std::cout << "-h                             Print this help." << std::endl;
   std::cout << std::endl;
@@ -94,11 +115,12 @@ int main( int argc, char *argv[] )
   bool useMask                   = false;
   
   short distanceMeasureChoice    = 0;
-  short backgroundIntensityValue = 0;
-  short interpolationApproach    = 1; // 0: NN; 1: linear; 2: cubic B-Splines
+  bool computeMSD                = true;
+  bool computeNCC                = true;
+  bool computeMI                 = true;
   
   // Reading parameters: 
-  while( (c = getopt( argc, argv, "I::M:o:?" )) != -1 )
+  while( (c = getopt( argc, argv, "I::M:m:l:?" )) != -1 )
   {
     switch( c )
     {
@@ -126,15 +148,25 @@ int main( int argc, char *argv[] )
         logfileFilename = optarg;
         std::cout << "  Logfile filename:                  " << logfileFilename << std::endl;
         break;
-      case 'o':
+      case 'm':
         distanceMeasureChoice = atoi( optarg );
-        if( distanceMeasureChoice == 0 )
+        if( distanceMeasureChoice == 1 )
         {
-          std::cout << "  Distance measure:                  MUTUAL INFORMATION" << std::endl;
+          std::cout << "  Distance measure:                  only MSD" << std::endl;
+          computeNCC = false;
+          computeMI  = false;
         }
-        else
+        else if( distanceMeasureChoice == 2 )
         {
-          std::cout << "  Distance measure:                  MUTUAL INFORMATION" << std::endl;
+          std::cout << "  Distance measure:                  only NCC" << std::endl;
+          computeMSD = false;
+          computeMI  = false;
+        }
+        else if( distanceMeasureChoice == 3 )
+        {
+          std::cout << "  Distance measure:                  only NMI" << std::endl;
+          computeMSD = false;
+          computeNCC  = false;
         }
         break;
       case 'h':
@@ -157,6 +189,11 @@ int main( int argc, char *argv[] )
   if( inputImage2Filename == NULL )
   {
     std::cerr << "ERROR: No second input image filename!" << std::endl;
+    return EXIT_FAILURE;
+  }
+  if( logfileFilename == NULL )
+  {
+    std::cerr << "No logfile given!" << std::endl;
     return EXIT_FAILURE;
   }
   
@@ -201,12 +238,11 @@ int main( int argc, char *argv[] )
   
   std::cout << "OK." << std::endl;
   
-  // Loading mask image (if specified) and converting it into spatial object
-  // mask as required for itkImageToImageMetrics:
+  // Loading mask image (if specified) and converting it to maskImageType
+  // as required for itkImageToImageMetrics:
 
   ImageReaderType::Pointer maskImageReader;
-  SOImageType::Pointer maskImageSO;
-  MaskType::Pointer maskSO;
+  MaskImageType::Pointer maskImage;
   
   if( useMask )
   {
@@ -226,131 +262,188 @@ int main( int argc, char *argv[] )
       std::cerr << excp << std::endl;
       return EXIT_FAILURE;
     }
-    
     std::cout << "OK." << std::endl;
     
-    // Converting ImageType-mask image to ImageMaskSpatialObject::PixelType-mask image:
+    // Converting mask image to unsigned char-type:
+    CastFilterType::Pointer castFilter = CastFilterType::New();
+    castFilter->SetInput( maskImageReader->GetOutput() );
+    castFilter->Update();
     
-    maskImageSO = SOImageType::New();
-    SOImageType::SizeType size = maskImageReader->GetOutput()->GetLargestPossibleRegion().GetSize();
-    SOImageType::IndexType index = {{ 0, 0, 0 }};
-    
-    SOImageType::RegionType region;
-    region.SetSize( size );
-    region.SetIndex( index );
-    
-    maskImageSO->SetRegions( region );
-    maskImageSO->Allocate( true ); // initialize buffer to zero
-    
-    typedef itk::ImageRegionIterator< SOImageType > imageSOIterator;
-    
-    imageSOIterator itSO( maskImageSO, region );
-    itSO.GoToBegin();
-    
-    while( !itSO.IsAtEnd() )
-    {
-      itSO.Set( (unsigned char)(maskImageReader->GetOutput()->GetPixel( itSO.GetIndex() )) );
-      ++itSO;
-    }
-    maskSO = MaskType::New();
-    maskSO->SetImage( maskImageSO );
+    maskImage = castFilter->GetOutput();
   }
+  
+  // Generate logfile object:
+  
+  std::ofstream logfile;
+  logfile.open( logfileFilename, std::ios::app );
+  
+  logfile << "ICNS IMAGE TO IMAGE METRIC STATISTICS" << std::endl;
+  logfile << "Image 1:      " << inputImage1Filename << std::endl;
+  logfile << "Image 2:      " << inputImage2Filename << std::endl;
+  if( useMask ) logfile << "Mask image:   " << maskImageFilename << std::endl;
   
   // -------------------------------------------------------------
   // Computing distance between images:
   
-  // For mutual information: Acc. to the ITK documentation, the
-  // images to be compared should be normalized to zero mean and
-  // unit standard deviation.
-  // TODO: do so!
+  // MSD:
+  if( computeMSD )
+  {
+    double MSDValue = ComputeMSD( inputImage1Reader->GetOutput(), inputImage2Reader->GetOutput(), maskImage, useMask);
+    logfile << "MSD: " << MSDValue << std::endl;
+  }
+  if( computeNCC )
+  {
+    double NCCValue = ComputeNCC( inputImage1Reader->GetOutput(), inputImage2Reader->GetOutput(), maskImage, useMask);
+    logfile << "NCC: " << NCCValue << std::endl;
+  }
+  if( computeMI )
+  {
+    double MIValue  = ComputeMI( inputImage1Reader->GetOutput(), inputImage2Reader->GetOutput(), maskImage, useMask);
+    logfile << "MI: " << MIValue << std::endl;
+  }
+  
+  // -------------------------------------------------------------
+  // Show logfile content and close logfile:
+  
+  logfile.close();
+  
+  std::ifstream writtenLogfile( logfileFilename );
+  std::string str;
+  std::string fileContents;
+  while (std::getline( writtenLogfile, str ))
+  {
+    fileContents += str;
+    fileContents.push_back('\n');
+  }
+  std::cout << fileContents;
+  
+  std::cout << "------------------------------------------" << std::endl;
+  std::cout << "Finished." << std::endl;
+  std::cout << "==========================================" << std::endl;
+  
+  return EXIT_SUCCESS;
+}
 
-  MutualInformationMetricType::Pointer mutualInformationMetric = MutualInformationMetricType::New();
+// Implementation of additional routines:
+
+double ComputeMSD( const ImageType::Pointer image1,
+                   const ImageType::Pointer image2,
+                   const MaskImageType::Pointer mask,
+                   const bool useMask )
+{
+  typedef itk::MeanSquaresImageToImageMetric < ImageType , ImageType > MetricType;
+  typedef itk::LinearInterpolateImageFunction<ImageType, double > InterpolatorType;
+  typedef itk::TranslationTransform < double , 3 > TransformType;
   
-  //mutualInformationMetric->SetFixedImageStandardDeviation(  0.4 );
-  //mutualInformationMetric->SetMovingImageStandardDeviation( 0.4 );
-  
+  MetricType::Pointer metric = MetricType::New();
   TransformType::Pointer transform = TransformType::New();
   
   InterpolatorType::Pointer interpolator = InterpolatorType::New();
-  interpolator->SetInputImage( inputImage1Reader->GetOutput() );
+  interpolator->SetInputImage( image1 );
   
-  mutualInformationMetric->SetFixedImage( inputImage1Reader->GetOutput() );
-  mutualInformationMetric->SetMovingImage( inputImage2Reader->GetOutput() );
-
-  mutualInformationMetric->SetFixedImageRegion( inputImage1Reader->GetOutput()->GetLargestPossibleRegion() );
-  mutualInformationMetric->SetTransform( transform );
-  mutualInformationMetric->SetInterpolator( interpolator );
+  metric->SetFixedImage( image1 );
+  metric->SetMovingImage( image2 );
+  metric->SetFixedImageRegion( image1->GetLargestPossibleRegion() );
+  metric->SetTransform( transform );
+  metric->SetInterpolator( interpolator );
+  
   if( useMask )
   {
-    mutualInformationMetric->SetFixedImageMask( maskSO );
+    typedef itk::ImageMaskSpatialObject<3>   MaskType;
+    MaskType::Pointer  spatialObjectMask = MaskType::New();
+    spatialObjectMask->SetImage( mask ); // mask has to be unsigned char
+    metric->SetFixedImageMask( spatialObjectMask );
   }
   
   TransformType::ParametersType params(transform->GetNumberOfParameters());
   params.Fill(0.0);
+  metric->Initialize();
   
-  mutualInformationMetric->Initialize();
-  
-  
-  std::cout << "  MI VALUE: " << mutualInformationMetric->GetValue( params ) << std::endl;
-  
-  /*
-  // -------------------------------------------------------------
-  // Applying transformation to input image:
-  
-  std::cout << "----------------------------------------" << std::endl;
-  std::cout << "Applying transformation ... " << std::flush;
+  std::cout << "MSD: " << metric->GetValue( params ) << std::endl;
+  return metric->GetValue( params );
+} // end of ComputeMSD()
 
-  typedef itk::ResampleImageFilter<ImageType, ImageType> ResampleFilterType;
-  
-  typename ResampleFilterType::Pointer resample = ResampleFilterType::New();
-  resample->SetTransform( affineTransform );
-  resample->SetInput( inputImageReader->GetOutput() );
-  resample->SetReferenceImage( inputImageReader->GetOutput() );
-  resample->UseReferenceImageOn();
-  resample->SetDefaultPixelValue( backgroundIntensityValue );
 
-  if( interpolationApproach == 0 )
+double ComputeMI( const ImageType::Pointer image1,
+                  const ImageType::Pointer image2,
+                  const MaskImageType::Pointer mask,
+                  const bool useMask )
+{
+  typedef itk::NormalizedMutualInformationHistogramImageToImageMetric<ImageType, ImageType >    NormalizedMetricType;
+  
+  NormalizedMetricType::Pointer metric = NormalizedMetricType::New();
+  
+  InterpolatorType::Pointer interpolator = InterpolatorType::New();
+  interpolator->SetInputImage( image1 );
+  metric->SetInterpolator(interpolator);
+  
+  unsigned int numberOfHistogramBins = 12;
+  NormalizedMetricType::HistogramType::SizeType histogramSize;
+  histogramSize.SetSize(2);
+  histogramSize[0] = numberOfHistogramBins;
+  histogramSize[1] = numberOfHistogramBins;
+  metric->SetHistogramSize( histogramSize );
+  
+  typedef itk::TranslationTransform<double , 3 > TransformType;
+  TransformType::Pointer transform = TransformType::New();
+  metric->SetTransform(transform);
+  
+  metric->SetFixedImage(image1);
+  metric->SetMovingImage(image2);
+  metric->SetFixedImageRegion(image1->GetLargestPossibleRegion());
+  
+  TransformType::ParametersType parameters;
+  parameters.SetSize(3);
+  parameters.Fill(0);
+  
+  if( useMask )
   {
-    // generate a nearest neighbor interpolator
-    NNInterpolatorType::Pointer interpolator = NNInterpolatorType::New();
-    resample->SetInterpolator( interpolator );
-  }
-  else if( interpolationApproach == 2 )
-  {
-    // generate a B-spline interpolator
-    BSplineInterpolatorType::Pointer interpolator = BSplineInterpolatorType::New();
-    resample->SetInterpolator( interpolator );
-  }
-  else
-  {
-    // generate a linear interpolator
-    LinearInterpolatorType::Pointer interpolator = LinearInterpolatorType::New();
-    resample->SetInterpolator( interpolator );
+    typedef itk::ImageMaskSpatialObject<3>   MaskType;
+    MaskType::Pointer  spatialObjectMask = MaskType::New();
+    spatialObjectMask->SetImage( mask ); // mask has to be unsigned char
+    metric->SetFixedImageMask( spatialObjectMask );
   }
 
-  resample->Update();
-  std::cout << "OK." << std::endl;
+  metric->Initialize();
+  std::cout << "NMI: " << 1-metric->GetValue( parameters ) << std::endl;
+  return 1-metric->GetValue( parameters );
+} // end of ComputeMI()
+
+
+double ComputeNCC( const ImageType::Pointer image1,
+                   const ImageType::Pointer image2,
+                   const MaskImageType::Pointer mask,
+                   const bool useMask )
+{
+  typedef itk::NormalizedCorrelationImageToImageMetric < ImageType , ImageType > MetricType;
+  typedef itk::LinearInterpolateImageFunction<ImageType, double > InterpolatorType;
+  typedef itk::TranslationTransform < double , 3 > TransformType;
   
-  // -------------------------------------------------------------
-  // Writing output data:
+  MetricType::Pointer metric = MetricType::New();
+  TransformType::Pointer transform = TransformType::New();
   
-  std::cout << "----------------------------------------" << std::endl;
-  std::cout << "Writing output image ... "                << std::flush;
+  InterpolatorType::Pointer interpolator = InterpolatorType::New();
+  interpolator->SetInputImage( image1 );
   
-  ImageWriterType::Pointer imageWriter = ImageWriterType::New();
-  imageWriter->SetInput( resample->GetOutput() );
-  imageWriter->SetFileName( outputImageFilename );
-  try
+  metric->SetFixedImage( image1 );
+  metric->SetMovingImage( image2 );
+  metric->SetFixedImageRegion( image1->GetLargestPossibleRegion() );
+  metric->SetTransform( transform );
+  metric->SetInterpolator( interpolator );
+  
+  if( useMask )
   {
-    imageWriter->Update();
+    typedef itk::ImageMaskSpatialObject<3>   MaskType;
+    MaskType::Pointer  spatialObjectMask = MaskType::New();
+    spatialObjectMask->SetImage( mask ); // mask has to be unsigned char
+    metric->SetFixedImageMask( spatialObjectMask );
   }
-  catch( itk::ExceptionObject& excp )
-  {
-    std::cerr << "   ERROR while writing warped target image." << std::endl;
-    std::cerr << excp << std::endl;
-    return EXIT_FAILURE;
-  }
-  std::cout << "OK." << std::endl;*/
   
-  return EXIT_SUCCESS;
-}
+  TransformType::ParametersType params(transform->GetNumberOfParameters());
+  params.Fill(0.0);
+  metric->Initialize();
+  
+  std::cout << "NCC: " << metric->GetValue( params ) << std::endl;
+  
+  return metric->GetValue( params );
+} // end of ComputeNCC()
