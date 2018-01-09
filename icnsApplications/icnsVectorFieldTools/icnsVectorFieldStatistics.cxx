@@ -237,10 +237,10 @@ void ComputeVectorFieldMagnitudeStatistics( const DisplacementFieldType::Pointer
 {
   // Prepare result variables:
   unsigned int nVoxels          = 0;
-  double averageVectorMagnitude;// = 0.0;
-  double stdVectorMagnitude;//     = 0.0;
-  double minVectorMagnitude;//    = 0.0;
-  double maxVectorMagnitude;//     = 0.0;
+  double averageVectorMagnitude = 0.0;
+  double stdVectorMagnitude     = 0.0;
+  double minVectorMagnitude     = 100000.0;
+  double maxVectorMagnitude     = -100000.0;
   
   // Generate field and image iterators:
   typedef itk::ImageRegionConstIterator< DisplacementFieldType > ConstFieldIteratorType;
@@ -295,10 +295,10 @@ void ComputeVectorFieldComponentStatistics( const DisplacementFieldType::Pointer
 {
   // Prepare result variables:
   unsigned int nVoxels = 0;
-  double averageValue;//  = 0.0;
-  double stdValue;//      = 0.0;
-  double minValue;//      = 0.0;
-  double maxValue;//      = 0.0;
+  double averageValue  = 0.0;
+  double stdValue      = 0.0;
+  double minValue      = +100000.0;
+  double maxValue      = -100000.0;
   
   // Generate field and image iterators:
   typedef itk::ImageRegionConstIterator< DisplacementFieldType > ConstFieldIteratorType;
