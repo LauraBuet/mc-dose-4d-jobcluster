@@ -26,9 +26,13 @@ extern "C"
 #include <itkNormalizedMutualInformationHistogramImageToImageMetric.h>
 
 #include <itkLinearInterpolateImageFunction.h>
+#include <itkNearestNeighborInterpolateImageFunction.h>
 #include <itkTranslationTransform.h>
 #include <itkNormalizeImageFilter.h>
 #include <itkDiscreteGaussianImageFilter.h>
+
+#include <itkMaskImageFilter.h>
+#include <itkImageRegionIterator.h>
 
 // Project includes: NONE so far.
 
@@ -38,8 +42,8 @@ typedef itk::ImageFileReader<ImageType>                        ImageReaderType;
 typedef itk::ImageFileWriter<ImageType>                        ImageWriterType;
 typedef itk::Image<unsigned char, 3>                           MaskImageType;
 typedef itk::Image<double, 3>                                  InternalImageType;
-typedef itk::LinearInterpolateImageFunction<ImageType, double> InterpolatorType;
-typedef itk::LinearInterpolateImageFunction<InternalImageType, double> InternalImageTypeInterpolatorType;
+typedef itk::NearestNeighborInterpolateImageFunction<ImageType, double> InterpolatorType;
+typedef itk::NearestNeighborInterpolateImageFunction<InternalImageType, double> InternalImageTypeInterpolatorType;
 typedef itk::TranslationTransform<double, 3>                   TransformType;
 typedef itk::CastImageFilter<ImageType, MaskImageType>         CastFilterType;
 
@@ -47,6 +51,8 @@ typedef itk::CastImageFilter<ImageType, MaskImageType>         CastFilterType;
 // ---------------------------------------------------------------
 // Declaration of additional routines:
 // ---------------------------------------------------------------
+
+double ComputeMSD( const ImageType::Pointer image1, const ImageType::Pointer image2 );
 
 double ComputeMSD( const ImageType::Pointer image1,
                    const ImageType::Pointer image2,
@@ -207,11 +213,18 @@ int main( int argc, char *argv[] )
   
   std::cout << "  First input image ... " << std::flush;
   
+  ImageType::Pointer image1;
   ImageReaderType::Pointer inputImage1Reader = ImageReaderType::New();
   inputImage1Reader->SetFileName( inputImage1Filename );
   try
   {
     inputImage1Reader->Update();
+    image1 = inputImage1Reader->GetOutput();
+    
+    ImageType::SpacingType imageSpacing;
+    imageSpacing.Fill(1.0);
+    
+    image1->SetSpacing(imageSpacing);
   }
   catch( itk::ExceptionObject& excp )
   {
@@ -219,15 +232,21 @@ int main( int argc, char *argv[] )
     std::cerr << excp << std::endl;
     return EXIT_FAILURE;
   }
-  
   std::cout << "OK." << std::endl;
-  std::cout << "  Second input image ... " << std::flush;
   
+  std::cout << "  Second input image ... " << std::flush;
+  ImageType::Pointer image2;
   ImageReaderType::Pointer inputImage2Reader = ImageReaderType::New();
   inputImage2Reader->SetFileName( inputImage2Filename );
   try
   {
     inputImage2Reader->Update();
+    image2 = inputImage2Reader->GetOutput();
+    
+    ImageType::SpacingType imageSpacing;
+    imageSpacing.Fill(1.0);
+    
+    image2->SetSpacing(imageSpacing);
   }
   catch( itk::ExceptionObject& excp )
   {
@@ -235,7 +254,6 @@ int main( int argc, char *argv[] )
     std::cerr << excp << std::endl;
     return EXIT_FAILURE;
   }
-  
   std::cout << "OK." << std::endl;
   
   // Loading mask image (if specified) and converting it to maskImageType
@@ -247,7 +265,6 @@ int main( int argc, char *argv[] )
   if( useMask )
   {
     // Reading mask image:
-    
     std::cout << "  Mask image ... " << std::flush;
     
     maskImageReader = ImageReaderType::New();
@@ -270,6 +287,46 @@ int main( int argc, char *argv[] )
     castFilter->Update();
     
     maskImage = castFilter->GetOutput();
+    
+    MaskImageType::SpacingType maskImageSpacing;
+    maskImageSpacing.Fill(1.0);
+    maskImage->SetSpacing(maskImageSpacing);
+  }
+  
+  // If mask is used, use mask to mask input images:
+  typedef itk::MaskImageFilter< ImageType, MaskImageType, ImageType > MaskFilterType;
+  
+  MaskFilterType::Pointer maskFilter1;
+  MaskFilterType::Pointer maskFilter2;
+  double voxelRatio = 1.0;
+  
+  if( useMask )
+  {
+    // Compute images:
+    
+    maskFilter1= MaskFilterType::New();
+    maskFilter1->SetInput( image1 );
+    maskFilter1->SetMaskImage( maskImage );
+    maskFilter1->Update();
+    image1 = maskFilter1->GetOutput();
+  
+    maskFilter2 = MaskFilterType::New();
+    maskFilter2->SetInput( image2 );
+    maskFilter2->SetMaskImage( maskImage );
+    maskFilter2->Update();
+    image2 = maskFilter2->GetOutput();
+  
+    // Compute ratio:
+    double nTotalVoxel = 0;
+    double nMaskVoxel = 0;
+    
+    itk::ImageRegionIterator<MaskImageType> maskIt( maskImage, maskImage->GetLargestPossibleRegion() );
+    for( maskIt.GoToBegin(); !maskIt.IsAtEnd(); ++maskIt )
+    {
+      nTotalVoxel++;
+      if( maskIt.Get() != 0 ) nMaskVoxel++;
+    }
+    voxelRatio =  nTotalVoxel/nMaskVoxel;
   }
   
   // Generate logfile object:
@@ -288,18 +345,23 @@ int main( int argc, char *argv[] )
   // MSD:
   if( computeMSD )
   {
-    double MSDValue = ComputeMSD( inputImage1Reader->GetOutput(), inputImage2Reader->GetOutput(), maskImage, useMask);
+    //double MSDValue = ComputeMSD_WO( image1, image2, maskImage, useMask);
+    double MSDValue = ComputeMSD( image1, image2);
+    if( useMask ) MSDValue *= voxelRatio;
     logfile << "MSD: " << MSDValue << std::endl;
+    std::cout << "MSD: " << MSDValue << std::endl;
   }
   if( computeNCC )
   {
-    double NCCValue = ComputeNCC( inputImage1Reader->GetOutput(), inputImage2Reader->GetOutput(), maskImage, useMask);
+    double NCCValue = ComputeNCC( image1, image2, maskImage, useMask);
     logfile << "NCC: " << NCCValue << std::endl;
+    std::cout << "NCC: " << NCCValue << std::endl;
   }
   if( computeMI )
   {
-    double MIValue  = ComputeMI( inputImage1Reader->GetOutput(), inputImage2Reader->GetOutput(), maskImage, useMask);
+    double MIValue  = ComputeMI( image1, image2, maskImage, useMask);
     logfile << "MI: " << MIValue << std::endl;
+    std::cout << "MI: " << MIValue << std::endl;
   }
   
   // -------------------------------------------------------------
@@ -326,13 +388,39 @@ int main( int argc, char *argv[] )
 
 // Implementation of additional routines:
 
+double ComputeMSD( const ImageType::Pointer image1, const ImageType::Pointer image2 )
+{
+  typedef itk::MeanSquaresImageToImageMetric < ImageType , ImageType > MetricType;
+  typedef itk::NearestNeighborInterpolateImageFunction<ImageType, double > InterpolatorType;
+  typedef itk::TranslationTransform < double , 3 > TransformType;
+  
+  MetricType::Pointer metric = MetricType::New();
+  TransformType::Pointer transform = TransformType::New();
+  
+  InterpolatorType::Pointer interpolator = InterpolatorType::New();
+  interpolator->SetInputImage( image1 );
+  
+  metric->SetFixedImage( image1 );
+  metric->SetMovingImage( image2 );
+  metric->SetFixedImageRegion( image1->GetLargestPossibleRegion() );
+  metric->SetTransform( transform );
+  metric->SetInterpolator( interpolator );
+  
+  TransformType::ParametersType params(transform->GetNumberOfParameters());
+  params.Fill(0.0);
+  metric->Initialize();
+  
+  return metric->GetValue( params );
+}
+
+
 double ComputeMSD( const ImageType::Pointer image1,
                    const ImageType::Pointer image2,
                    const MaskImageType::Pointer mask,
                    const bool useMask )
 {
   typedef itk::MeanSquaresImageToImageMetric < ImageType , ImageType > MetricType;
-  typedef itk::LinearInterpolateImageFunction<ImageType, double > InterpolatorType;
+  typedef itk::NearestNeighborInterpolateImageFunction<ImageType, double > InterpolatorType;
   typedef itk::TranslationTransform < double , 3 > TransformType;
   
   MetricType::Pointer metric = MetricType::New();
@@ -350,7 +438,7 @@ double ComputeMSD( const ImageType::Pointer image1,
   if( useMask )
   {
     typedef itk::ImageMaskSpatialObject<3>   MaskType;
-    MaskType::Pointer  spatialObjectMask = MaskType::New();
+    MaskType::Pointer spatialObjectMask = MaskType::New();
     spatialObjectMask->SetImage( mask ); // mask has to be unsigned char
     metric->SetFixedImageMask( spatialObjectMask );
   }
@@ -359,7 +447,6 @@ double ComputeMSD( const ImageType::Pointer image1,
   params.Fill(0.0);
   metric->Initialize();
   
-  std::cout << "MSD: " << metric->GetValue( params ) << std::endl;
   return metric->GetValue( params );
 } // end of ComputeMSD()
 
@@ -405,7 +492,6 @@ double ComputeMI( const ImageType::Pointer image1,
   }
 
   metric->Initialize();
-  std::cout << "NMI: " << 1-metric->GetValue( parameters ) << std::endl;
   return 1-metric->GetValue( parameters );
 } // end of ComputeMI()
 
@@ -442,8 +528,6 @@ double ComputeNCC( const ImageType::Pointer image1,
   TransformType::ParametersType params(transform->GetNumberOfParameters());
   params.Fill(0.0);
   metric->Initialize();
-  
-  std::cout << "NCC: " << metric->GetValue( params ) << std::endl;
   
   return metric->GetValue( params );
 } // end of ComputeNCC()

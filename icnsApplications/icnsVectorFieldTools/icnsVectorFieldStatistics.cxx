@@ -20,7 +20,7 @@
 
 typedef itk::Image<short, 3>                        ImageType;
 typedef itk::ImageFileReader<ImageType>             ImageReaderType;
-typedef itk::Image<itk::Vector<float, 3>, 3>        DisplacementFieldType;
+typedef itk::Image<itk::Vector<double, 3>, 3>       DisplacementFieldType;
 typedef itk::ImageFileReader<DisplacementFieldType> DisplacementFieldReaderType;
 
 typedef itk::DisplacementFieldJacobianDeterminantFilter<DisplacementFieldType> JacobianDeterminantFilterType;
@@ -263,8 +263,8 @@ void ComputeVectorFieldMagnitudeStatistics( const DisplacementFieldType::Pointer
   unsigned int nVoxels          = 0;
   double averageVectorMagnitude = 0.0;
   double stdVectorMagnitude     = 0.0;
-  double minVectorMagnitude     = 0.0;
-  double maxVectorMagnitude     = 0.0;
+  double minVectorMagnitude     = +10000.0;
+  double maxVectorMagnitude     = -10000.0;
   
   // Generate field and image iterators:
   typedef itk::ImageRegionConstIterator< DisplacementFieldType > ConstFieldIteratorType;
@@ -323,8 +323,8 @@ void ComputeVectorFieldComponentStatistics( const DisplacementFieldType::Pointer
   unsigned int nVoxels = 0;
   double averageValue  = 0.0;
   double stdValue      = 0.0;
-  double minValue      = 0.0;
-  double maxValue      = 0.0;
+  double minValue      = +1000.0;
+  double maxValue      = -1000.0;
   
   // Generate field and image iterators:
   typedef itk::ImageRegionConstIterator< DisplacementFieldType > ConstFieldIteratorType;
