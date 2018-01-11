@@ -33,6 +33,7 @@ extern "C"
 
 #include <itkMaskImageFilter.h>
 #include <itkImageRegionIterator.h>
+#include <itkNormalizeImageFilter.h>
 
 // Project includes: NONE so far.
 
@@ -456,15 +457,26 @@ double ComputeMI( const ImageType::Pointer image1,
                   const MaskImageType::Pointer mask,
                   const bool useMask )
 {
-  typedef itk::NormalizedMutualInformationHistogramImageToImageMetric<ImageType, ImageType >    NormalizedMetricType;
+  typedef itk::NormalizedMutualInformationHistogramImageToImageMetric<InternalImageType, InternalImageType >    NormalizedMetricType;
   
   NormalizedMetricType::Pointer metric = NormalizedMetricType::New();
   
-  InterpolatorType::Pointer interpolator = InterpolatorType::New();
-  interpolator->SetInputImage( image1 );
+  typedef itk::NormalizeImageFilter< ImageType, InternalImageType > NormalizeFilterType;
+  
+  NormalizeFilterType::Pointer normalizeFilter1 = NormalizeFilterType::New();
+  normalizeFilter1->SetInput(image1);
+  normalizeFilter1->Update();
+  
+  NormalizeFilterType::Pointer normalizeFilter2 = NormalizeFilterType::New();
+  normalizeFilter2->SetInput(image2);
+  normalizeFilter2->Update();
+  
+  InternalImageTypeInterpolatorType::Pointer interpolator = InternalImageTypeInterpolatorType::New();
+  //interpolator->SetInputImage( image1 );
+  interpolator->SetInputImage( normalizeFilter1->GetOutput() );
   metric->SetInterpolator(interpolator);
   
-  unsigned int numberOfHistogramBins = 12;
+  unsigned int numberOfHistogramBins = 6;
   NormalizedMetricType::HistogramType::SizeType histogramSize;
   histogramSize.SetSize(2);
   histogramSize[0] = numberOfHistogramBins;
@@ -475,12 +487,11 @@ double ComputeMI( const ImageType::Pointer image1,
   TransformType::Pointer transform = TransformType::New();
   metric->SetTransform(transform);
   
-  metric->SetFixedImage(image1);
-  metric->SetMovingImage(image2);
-  metric->SetFixedImageRegion(image1->GetLargestPossibleRegion());
+  metric->SetFixedImage( normalizeFilter1->GetOutput() );
+  metric->SetMovingImage( normalizeFilter2->GetOutput() );
+  metric->SetFixedImageRegion( normalizeFilter1->GetOutput()->GetLargestPossibleRegion());
   
-  TransformType::ParametersType parameters;
-  parameters.SetSize(3);
+  TransformType::ParametersType parameters(transform->GetNumberOfParameters());
   parameters.Fill(0);
   
   if( useMask )
