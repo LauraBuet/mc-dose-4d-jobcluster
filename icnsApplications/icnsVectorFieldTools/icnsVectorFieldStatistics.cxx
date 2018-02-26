@@ -10,9 +10,8 @@
 #include <fstream>
 
 // ITK includes:
-#include <itkImageFileReader.h>
-#include <itkImageRegionConstIterator.h>
-#include <itkDisplacementFieldJacobianDeterminantFilter.h>
+#include "itkImageFileReader.h"
+#include "itkImageRegionConstIterator.h"
 
 // Project includes: None so far
 
@@ -20,11 +19,8 @@
 
 typedef itk::Image<short, 3>                        ImageType;
 typedef itk::ImageFileReader<ImageType>             ImageReaderType;
-typedef itk::Image<itk::Vector<double, 3>, 3>       DisplacementFieldType;
+typedef itk::Image<itk::Vector<float, 3>, 3>        DisplacementFieldType;
 typedef itk::ImageFileReader<DisplacementFieldType> DisplacementFieldReaderType;
-
-typedef itk::DisplacementFieldJacobianDeterminantFilter<DisplacementFieldType> JacobianDeterminantFilterType;
-typedef JacobianDeterminantFilterType::OutputImageType                         JacobianDeterminantImageType;
 
 // ---------------------------------------------------------------
 // Declaration of additional routines:
@@ -39,10 +35,6 @@ void ComputeVectorFieldComponentStatistics( const DisplacementFieldType::Pointer
                                             const ImageType::Pointer mask,
                                             const bool useMask,
                                             int component );
-void ComputeJacobianDeterminantStatistics( const DisplacementFieldType::Pointer field,
-                                           std::ofstream& logfile,
-                                           const ImageType::Pointer mask,
-                                           const bool useMask );
 
 // ---------------------------------------------------------------
 // Print help routine:
@@ -52,12 +44,11 @@ void PrintHelp()
 {
   std::cout << "\n";
   std::cout << "Usage:\n";
-  std::cout << "icnsVectorFieldStatistics -I <vector field FN> -M <mask image FN> -l <logfile FN> [...]\n";
+  std::cout << "icnsVectorFieldStatistics -I <vector field FN> -S <mask image FN> -L <logfile FN> [...]\n";
   std::cout << std::endl;
-  std::cout << "-I <vector field FN>       [IN] Vector field to analyze." << std::endl;
-  std::cout << "-M <mask image FN>         [IN] Mask image to constrain analysis." << std::endl;
-  std::cout << "-F <logfile FN>            [OUT] Filename of logfile to write." << std::endl;
-  std::cout << "-j                         Compute Jacobian statistics." << std::endl;
+  std::cout << "-I <image FN>              [IN] Vector field to analyze." << std::endl;
+  std::cout << "-S <mask image FN>         [IN] Mask image to constrain analysis." << std::endl;
+  std::cout << "-F <logfile FN>            [OUT] Filename of logfile to write." << std::endl;
   std::cout << "-?                         Print this help." << std::endl;
   std::cout << std::endl;
 }
@@ -88,12 +79,11 @@ int main( int argc, char *argv[] )
   
   // Other params:
   bool useMask              = false;
-  bool computeJacobianStats = false;
   
   // Reading data:
   
   int c;
-  while( (c = getopt( argc, argv, "I:S:M:l:jh?" )) != -1 )
+  while( (c = getopt( argc, argv, "I:S:L:h?" )) != -1 )
   {
     switch( c )
     {
@@ -107,13 +97,9 @@ int main( int argc, char *argv[] )
         useMask = true;
         std::cout << "  Mask image filename:       " << maskImageFilename << std::endl;
         break;
-      case 'l':
+      case 'L':
         logfileFilename = optarg;
         std::cout << "  Logfile filename:          " << logfileFilename << std::endl;
-        break;
-      case 'j':
-        computeJacobianStats = true;
-        std::cout << "  Compute Jacobian stats:    " << "TRUE" << std::endl;
         break;
       case 'h':
       case '?':
@@ -146,7 +132,7 @@ int main( int argc, char *argv[] )
   DisplacementFieldType::Pointer vectorField;
   ImageType::Pointer maskImage;
   
-  std::cout << "------------------------------------------" << std::endl;
+   std::cout << "------------------------------------------" << std::endl;
   std::cout << "Loading input data ..." << std::endl;
   
   // Loading input vector field:
@@ -220,16 +206,6 @@ int main( int argc, char *argv[] )
   ComputeVectorFieldComponentStatistics( vectorField, logfile, maskImage, useMask, 2 );
   std::cout << "OK." << std::endl;
   
-  // Compute Jacobian statistics (if desired):
-  
-  if( computeJacobianStats )
-  {
-    std::cout << "------------------------------------------" << std::endl;
-    std::cout << "Computing Jacobian statistics ..." << std::endl;
-    ComputeJacobianDeterminantStatistics( vectorField, logfile, maskImage, useMask );
-    std::cout << "OK." << std::endl;
-  }
-  
   // Show logfile content and close logfile:
   
   logfile.close();
@@ -263,8 +239,8 @@ void ComputeVectorFieldMagnitudeStatistics( const DisplacementFieldType::Pointer
   unsigned int nVoxels          = 0;
   double averageVectorMagnitude = 0.0;
   double stdVectorMagnitude     = 0.0;
-  double minVectorMagnitude     = +10000.0;
-  double maxVectorMagnitude     = -10000.0;
+  double minVectorMagnitude     = 100000.0;
+  double maxVectorMagnitude     = -100000.0;
   
   // Generate field and image iterators:
   typedef itk::ImageRegionConstIterator< DisplacementFieldType > ConstFieldIteratorType;
@@ -309,9 +285,7 @@ void ComputeVectorFieldMagnitudeStatistics( const DisplacementFieldType::Pointer
   // Write to logfile:
   logfile << "Vector field magnitude [mm]: " << averageVectorMagnitude << " pm " << stdVectorMagnitude;
   logfile << " [min: " << minVectorMagnitude << "; max: " << maxVectorMagnitude << "]" << std::endl;
-  
-} // end of ComputeVectorFieldMagnitudeStatistics()
-
+}
 
 void ComputeVectorFieldComponentStatistics( const DisplacementFieldType::Pointer field,
                                             std::ofstream& logfile,
@@ -323,8 +297,8 @@ void ComputeVectorFieldComponentStatistics( const DisplacementFieldType::Pointer
   unsigned int nVoxels = 0;
   double averageValue  = 0.0;
   double stdValue      = 0.0;
-  double minValue      = +1000.0;
-  double maxValue      = -1000.0;
+  double minValue      = +100000.0;
+  double maxValue      = -100000.0;
   
   // Generate field and image iterators:
   typedef itk::ImageRegionConstIterator< DisplacementFieldType > ConstFieldIteratorType;
@@ -368,74 +342,4 @@ void ComputeVectorFieldComponentStatistics( const DisplacementFieldType::Pointer
   // Write to logfile:
   logfile << "Vector field comp. " << component << " [mm]:   " << averageValue << " pm " << stdValue;
   logfile << " [min: " << minValue << "; max: " << maxValue << "]" << std::endl;
-  
-} // end of ComputeVectorFieldComponentStatistics()
-
-
-void ComputeJacobianDeterminantStatistics( const DisplacementFieldType::Pointer field,
-                                           std::ofstream& logfile,
-                                           const ImageType::Pointer mask,
-                                           const bool useMask )
-{
-  // Generate Jacobian image:
-  JacobianDeterminantFilterType::Pointer jacFilter = JacobianDeterminantFilterType::New();
-  jacFilter->SetInput( field );
-  jacFilter->SetUseImageSpacingOn();
-  jacFilter->Update();
-  
-  // Prepare result variables:
-  unsigned int nVoxels = 0;
-  double averageValue  = 0.0;
-  double stdValue      = 0.0;
-  double minValue      = 1000.0;
-  double maxValue      = -1000.0;
-  
-  // Generate iterator for Jacobian determinant filter output:
-  typedef itk::ImageRegionConstIterator< JacobianDeterminantImageType > JacobianDeterminantImageIteratorType;
-  typedef itk::ImageRegionConstIterator< ImageType > ConstMaskIteratorType;
-  
-  JacobianDeterminantImageIteratorType jacIt = JacobianDeterminantImageIteratorType(
-                                                 jacFilter->GetOutput(),
-                                                 (jacFilter->GetOutput())->GetLargestPossibleRegion() );
-  jacIt.GoToBegin();
-  
-  ConstMaskIteratorType maskIt;
-  if( useMask )
-  {
-    maskIt = ConstMaskIteratorType( mask, mask->GetLargestPossibleRegion() );
-    maskIt.GoToBegin();
-  }
-  
-  // Compute statistics:
-  double voxelValue = 0.0;
-  for( ; !jacIt.IsAtEnd(); ++jacIt)
-  {
-    // If mask is given and pixel is outside mask, continue:
-    if( useMask && maskIt.Get() == 0 )
-    {
-      ++maskIt;
-      continue;
-    }
-    
-    // Otherwise update statistics:
-    nVoxels++;
-    voxelValue   = jacIt.Get();
-    averageValue += voxelValue;
-    stdValue     += voxelValue*voxelValue;
-    minValue     = (minValue < voxelValue) ? minValue : voxelValue;
-    maxValue     = (maxValue > voxelValue) ? maxValue : voxelValue;
-    
-    // And update mask iterator:
-    if( useMask ) ++maskIt;
-  }
-  
-  // Calculate average values:
-  averageValue /= nVoxels; // E(X)
-  stdValue     /= nVoxels; // E(X^2)
-  stdValue     = sqrt( stdValue - averageValue*averageValue ); // V(X) = E(X^2) - E(X)^2
-  
-  // Write to logfile:
-  logfile << "Jacobian determinant: " << averageValue << " pm " << stdValue;
-  logfile << " [min: " << minValue << "; max: " << maxValue << "]" << std::endl;
-  
-} // end of ComputeJacobianDeterminantStatistics()
+}

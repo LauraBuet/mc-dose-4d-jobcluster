@@ -79,8 +79,8 @@ void PrintHelp()
   std::cout << "Usage icnsVariationalRegistration:\n";
   std::cout << "icnsVariationalRegistration -F <fixed image FN> -M <moving image FN> -O <output field FN> [...]\n\n";
   std::cout << std::endl;
-  std::cout << "-F <image FN>              [IN] Filename of the FIXED image." << std::endl;
-  std::cout << "-M <image FN>              [IN] Filename of the MOVING image." << std::endl;
+  std::cout << "-F <image FN>              [IN] Filename of the FIXED image." << std::endl;
+  std::cout << "-M <image FN>              [IN] Filename of the MOVING image." << std::endl;
   std::cout << "-D <4DCT directory name>   [IN] Directory of 4D data to read." << std::endl;
   std::cout << "-S <segmentation mask>     [IN] Filename of registration mask image (optional)." << std::endl;
   std::cout << "-I <initial vector field>  [IN] Filename of initial deformation field (optional)." << std::endl;
@@ -932,7 +932,7 @@ std::vector<ImageType::Pointer> ReadTemporalImageSequence( char* directoryFN )
   
   NamesGeneratorType::Pointer namesGenerator = NamesGeneratorType::New();
   namesGenerator->SetDirectory( directoryFN );
-  
+     
   typedef std::vector<std::string> SeriesIDContainer;
   const SeriesIDContainer& seriesUID = namesGenerator->GetSeriesUIDs();
   SeriesIDContainer::const_iterator seriesItr = seriesUID.begin();

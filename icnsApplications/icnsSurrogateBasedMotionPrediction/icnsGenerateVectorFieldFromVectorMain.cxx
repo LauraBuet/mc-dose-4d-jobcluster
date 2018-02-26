@@ -8,6 +8,7 @@
 
 // System includes:
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -104,23 +105,44 @@ int main( int argc, char *argv[] )
 
   icnsSurrogateBasedMotionPredictionHelpers::ReadMatrixFromMatlabFileRealType(inputMatrix,inputFilename);
 
-  // std::cout<<"inputMatrix ("<<inputMatrix.rows()<<","<<inputMatrix.cols()<<"): "<<inputMatrix<<std::endl;
+  VnlMatrixType currentColMatrix;
+  currentColMatrix.set_size( inputMatrix.rows(), 1 );
 
-  icnsSurrogateBasedMotionPredictionHelpers::GenerateVectorFieldFromVnlVector(inputMatrix,outputField,refFieldFilename,maskFilename);
+  //std::cout<<"inputMatrix ("<<inputMatrix.rows()<<","<<inputMatrix.cols()<<"): "<<inputMatrix<<std::endl;
 
-  typedef itk::ImageFileWriter< DisplacementFieldType > FieldWriterType;
-  FieldWriterType::Pointer displacementFieldWriter = FieldWriterType::New();
-
-  displacementFieldWriter->SetInput( outputField);
-  displacementFieldWriter->SetFileName( outputFilename );
-  try
+  for( unsigned int i=0; i<inputMatrix.cols(); i++ )
   {
-    displacementFieldWriter->Update();
-  }
-  catch( itk::ExceptionObject & excep )
-  {
-    std::cerr << " Save failed with exception:" << excep << std::endl;
-    return EXIT_FAILURE;
+    for( unsigned int j=0; j<inputMatrix.rows(); j++ )
+    {
+      currentColMatrix[j][i] = inputMatrix[j][i];
+    }
+    std::ostringstream strs;
+    strs << i;
+    std::string mha = ".mha";
+    std::string str = "_";
+    str += strs.str();
+    str += mha;
+
+    std::string currentColMatrixName;
+    currentColMatrixName = outputFilename.substr(0,outputFilename.length()-4);
+    currentColMatrixName += str;
+
+    icnsSurrogateBasedMotionPredictionHelpers::GenerateVectorFieldFromVnlVector(currentColMatrix,outputField,refFieldFilename,maskFilename);
+
+    typedef itk::ImageFileWriter< DisplacementFieldType > FieldWriterType;
+    FieldWriterType::Pointer displacementFieldWriter = FieldWriterType::New();
+
+    displacementFieldWriter->SetInput( outputField);
+    displacementFieldWriter->SetFileName( currentColMatrixName );
+    try
+    {
+      displacementFieldWriter->Update();
+    }
+    catch( itk::ExceptionObject & excep )
+    {
+      std::cerr << " Save failed with exception:" << excep << std::endl;
+      return EXIT_FAILURE;
+    }
   }
 
   std::cout << "imiGenerateVectorFieldFromVector FINISHED." << std::endl;
