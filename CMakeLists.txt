@@ -32,25 +32,25 @@ SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 # ---------- Find where VTK was built or installed.
 
-# FIND_PACKAGE(VTK)
+FIND_PACKAGE(VTK)
  
-# IF(VTK_FOUND)
-#  INCLUDE(${VTK_USE_FILE})
-# ELSE(VTK_FOUND)
-#  MESSAGE(FATAL_ERROR "Cannot build without VTK. Please set VTK_DIR.")
-# ENDIF(VTK_FOUND)
+IF(VTK_FOUND)
+  INCLUDE(${VTK_USE_FILE})
+ELSE(VTK_FOUND)
+  MESSAGE(FATAL_ERROR "Cannot build without VTK. Please set VTK_DIR.")
+ENDIF(VTK_FOUND)
 
-# SET(VTK_LIBS 
-#   vtkRendering
-#   vtkVolumeRendering 
-#   vtkGraphics 
-#   vtkHybrid 
-#   vtkImaging 
-#   vtkIO 
-#   vtkFiltering 
-#   vtkCommon
-#   vtkWidgets 
-# )
+SET(VTK_LIBS 
+  vtkRendering
+  vtkVolumeRendering 
+  vtkGraphics 
+  vtkHybrid 
+  vtkImaging 
+  vtkIO 
+  vtkFiltering 
+  vtkCommon
+  vtkWidgets 
+)
 
 # ---------- Find where ITK was built or installed.
 
@@ -66,7 +66,7 @@ ENDIF(ITK_FOUND)
 
 LINK_LIBRARIES(
   ${ITK_LIBRARIES}
- # ${VTK_LIBRARIES}
+  ${VTK_LIBRARIES}
 )
 
 # SET(ITK_LIBS 

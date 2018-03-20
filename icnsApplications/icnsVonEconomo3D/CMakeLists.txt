@@ -56,6 +56,10 @@ ADD_EXECUTABLE(icnsFlipVTKPolyData MACOSX_BUNDLE icnsFlipVTKPolyData.cxx vtkText
 ADD_EXECUTABLE(icnsTransferVTKPolyDataScalars MACOSX_BUNDLE icnsTransferVTKPolyDataScalars.cxx vtkTexturingHelper.h vtkTexturingHelper.cpp)
 ADD_EXECUTABLE(icnsTransformVTKPolyData MACOSX_BUNDLE icnsTransformVTKPolyData.cxx )
 
+# Surface model evaluation functionality:
+
+ADD_EXECUTABLE(icnsEvaluateVTKPolyDataLabelAreas MACOSX_BUNDLE icnsEvaluateVTKPolyDataLabelAreas.cxx)
+
 # ------------------------------------------------- 
 # Define libraries to link:
 
@@ -73,3 +77,5 @@ target_link_libraries(icnsAppendVTKPolyData ${VTK_LIBRARIES})
 target_link_libraries(icnsFlipVTKPolyData ${VTK_LIBRARIES})
 target_link_libraries(icnsTransferVTKPolyDataScalars ${VTK_LIBRARIES})
 target_link_libraries(icnsTransformVTKPolyData ${VTK_LIBRARIES})
+
+target_link_libraries(icnsEvaluateVTKPolyDataLabelAreas ${VTK_LIBRARIES})

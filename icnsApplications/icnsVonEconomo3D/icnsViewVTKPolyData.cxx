@@ -415,9 +415,9 @@ int main( int argc, char *argv[] )
   renderWindowInteractor->AddObserver( vtkCommand::KeyPressEvent, clickCallback );
   
   renderer->SetBackground( 1.0, 1.0, 1.0 ); // Background color white
-  renderer->GradientBackgroundOn();
-  renderer->SetBackground( 1, 1, 1);
-  renderer->SetBackground2( 0, 0, 0);
+  //renderer->GradientBackgroundOn();
+  //renderer->SetBackground( 1, 1, 1);
+  //renderer->SetBackground2( 0, 0, 0);
   renderer->ResetCamera();
   
   renderWindow->SetSize( 800, 600 );

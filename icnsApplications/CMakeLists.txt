@@ -11,6 +11,6 @@ SUBDIRS(
   icnsSurrogateBasedMotionPrediction
   icnsVariationalRegistration
   icnsVectorFieldTools
- # icnsVisualizationTools
- # icnsVonEconomo3D
+  icnsVisualizationTools
+  icnsVonEconomo3D
 )
